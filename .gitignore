@@ -7,3 +7,20 @@ dist/
 .DS_Store
 coverage/
 .turbo/
+
+# TypeScript build artifacts
+*.tsbuildinfo
+packages/**/*.js
+packages/**/*.js.map
+packages/**/*.d.ts
+packages/**/*.d.ts.map
+!packages/**/drizzle.config.js
+
+# Drizzle build artifacts (config only)
+packages/db/drizzle.config.js
+packages/db/drizzle.config.js.map
+packages/db/drizzle.config.d.ts
+packages/db/drizzle.config.d.ts.map
+
+# Claude internal
+.claude/

@@ -1,0 +1,23 @@
+{
+  "name": "@kaiban/server",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "fastify": "^5.2.0",
+    "@fastify/cors": "^11.0.0",
+    "@kaiban/core": "*",
+    "@kaiban/db": "*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0"
+  }
+}
