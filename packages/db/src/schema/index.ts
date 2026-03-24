@@ -6,3 +6,4 @@ export { activities, activitiesRelations } from './activities';
 export { agentSessions, agentSessionsRelations } from './agent-sessions';
 export { labels, labelsRelations } from './labels';
 export { views, viewsRelations } from './views';
+export { webhooks, webhooksRelations, webhookDeliveries, webhookDeliveriesRelations } from './webhooks';

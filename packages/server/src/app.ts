@@ -19,6 +19,7 @@ import { userRoutes } from './routes/users';
 import { authRoutes } from './routes/auth';
 import { sessionRoutes } from './routes/sessions';
 import { aiRoutes } from './routes/ai';
+import { webhookRoutes } from './routes/webhooks';
 
 export async function buildApp() {
   const app = Fastify({
@@ -68,6 +69,7 @@ export async function buildApp() {
   await app.register(authRoutes, { prefix: '/api/v1' });
   await app.register(sessionRoutes, { prefix: '/api/v1' });
   await app.register(aiRoutes, { prefix: '/api/v1' });
+  await app.register(webhookRoutes, { prefix: '/api/v1' });
 
   return app;
 }

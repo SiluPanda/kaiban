@@ -1001,6 +1001,130 @@ describe('Sessions', () => {
   });
 });
 
+// ─── Webhooks ────────────────────────────────────────────────────────────────
+
+describe('Webhooks', () => {
+  let whSlug: string;
+
+  beforeAll(async () => {
+    whSlug = unique('wh-proj');
+    await createProject(whSlug);
+  });
+
+  describe('POST /api/v1/projects/:slug/webhooks', () => {
+    it('registers a webhook (admin only)', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/v1/projects/${whSlug}/webhooks`,
+        headers: authHeader(admin),
+        payload: { url: 'https://example.com/hook', events: ['task.created', 'task.updated'] },
+      });
+      expect(res.statusCode).toBe(201);
+      const wh = res.json().data;
+      expect(wh.url).toBe('https://example.com/hook');
+      expect(wh.events).toEqual(['task.created', 'task.updated']);
+      expect(wh.secret).toBeDefined();
+      expect(wh.secret.length).toBeGreaterThan(0);
+    });
+
+    it('returns 403 for non-admin', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/v1/projects/${whSlug}/webhooks`,
+        headers: authHeader(member),
+        payload: { url: 'https://example.com/hook', events: ['task.created'] },
+      });
+      expect(res.statusCode).toBe(403);
+    });
+
+    it('returns 404 for non-existent project', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/projects/nonexistent/webhooks',
+        headers: authHeader(admin),
+        payload: { url: 'https://example.com/hook', events: ['task.created'] },
+      });
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
+  describe('GET /api/v1/projects/:slug/webhooks', () => {
+    it('lists webhooks for a project', async () => {
+      const listSlug = unique('wh-list');
+      await createProject(listSlug);
+      await app.inject({
+        method: 'POST',
+        url: `/api/v1/projects/${listSlug}/webhooks`,
+        headers: authHeader(admin),
+        payload: { url: 'https://a.com/hook', events: ['task.created'] },
+      });
+
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/v1/projects/${listSlug}/webhooks`,
+        headers: authHeader(admin),
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.length).toBe(1);
+      // Secret should NOT be in the list response
+      expect(res.json().data[0].secret).toBeUndefined();
+    });
+  });
+
+  describe('DELETE /api/v1/webhooks/:id', () => {
+    it('deletes a webhook', async () => {
+      const delSlug = unique('wh-del');
+      await createProject(delSlug);
+      const createRes = await app.inject({
+        method: 'POST',
+        url: `/api/v1/projects/${delSlug}/webhooks`,
+        headers: authHeader(admin),
+        payload: { url: 'https://b.com/hook', events: ['*'] },
+      });
+      const whId = createRes.json().data.id;
+
+      const res = await app.inject({
+        method: 'DELETE',
+        url: `/api/v1/webhooks/${whId}`,
+        headers: authHeader(admin),
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.deleted).toBe(true);
+    });
+
+    it('returns 404 for non-existent webhook', async () => {
+      const res = await app.inject({
+        method: 'DELETE',
+        url: '/api/v1/webhooks/00000000-0000-0000-0000-000000000000',
+        headers: authHeader(admin),
+      });
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
+  describe('GET /api/v1/webhooks/:id/deliveries', () => {
+    it('returns empty delivery log for new webhook', async () => {
+      const logSlug = unique('wh-log');
+      await createProject(logSlug);
+      const createRes = await app.inject({
+        method: 'POST',
+        url: `/api/v1/projects/${logSlug}/webhooks`,
+        headers: authHeader(admin),
+        payload: { url: 'https://c.com/hook', events: ['task.created'] },
+      });
+      const whId = createRes.json().data.id;
+
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/v1/webhooks/${whId}/deliveries`,
+        headers: authHeader(admin),
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.length).toBe(0);
+    });
+  });
+});
+
 // ─── AI ──────────────────────────────────────────────────────────────────────
 
 describe('AI', () => {
