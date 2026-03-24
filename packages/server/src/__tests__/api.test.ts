@@ -1001,6 +1001,82 @@ describe('Sessions', () => {
   });
 });
 
+// ─── Duplicates ──────────────────────────────────────────────────────────────
+
+describe('Duplicates', () => {
+  let dupSlug: string;
+  let dupTaskId: string;
+
+  beforeAll(async () => {
+    dupSlug = unique('dup-proj');
+    await createProject(dupSlug);
+    const t = await createTask(dupSlug, { title: 'Fix authentication login flow' });
+    dupTaskId = t.id;
+    await createTask(dupSlug, { title: 'Fix authentication logout bug' });
+    await createTask(dupSlug, { title: 'Implement user profile page' });
+    await createTask(dupSlug, { title: 'Add email notification system' });
+  });
+
+  describe('POST /api/v1/projects/:slug/duplicates', () => {
+    it('finds similar tasks by title', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/v1/projects/${dupSlug}/duplicates`,
+        headers: authHeader(member),
+        payload: { title: 'Fix authentication login issue', threshold: 0.2 },
+      });
+      expect(res.statusCode).toBe(200);
+      const data = res.json().data;
+      expect(data.duplicates.length).toBeGreaterThanOrEqual(1);
+      expect(data.duplicates[0].similarity).toBeDefined();
+    });
+
+    it('returns empty when no matches', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/v1/projects/${dupSlug}/duplicates`,
+        headers: authHeader(member),
+        payload: { title: 'zzzzz completely unique task', threshold: 0.5 },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.duplicates.length).toBe(0);
+    });
+
+    it('returns 404 for non-existent project', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/projects/nonexistent/duplicates',
+        headers: authHeader(member),
+        payload: { title: 'test' },
+      });
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
+  describe('GET /api/v1/tasks/:id/similar', () => {
+    it('finds tasks similar to an existing task', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/v1/tasks/${dupTaskId}/similar?threshold=0.2`,
+        headers: authHeader(member),
+      });
+      expect(res.statusCode).toBe(200);
+      const data = res.json().data;
+      expect(data.task.id).toBe(dupTaskId);
+      expect(data.similar.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('returns 404 for non-existent task', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/v1/tasks/00000000-0000-0000-0000-000000000000/similar',
+        headers: authHeader(member),
+      });
+      expect(res.statusCode).toBe(404);
+    });
+  });
+});
+
 // ─── Analytics ───────────────────────────────────────────────────────────────
 
 describe('Analytics', () => {
