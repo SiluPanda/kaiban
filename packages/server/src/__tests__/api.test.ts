@@ -1001,6 +1001,86 @@ describe('Sessions', () => {
   });
 });
 
+// ─── AI ──────────────────────────────────────────────────────────────────────
+
+describe('AI', () => {
+  describe('GET /api/v1/ai/status', () => {
+    it('reports AI not configured when no env vars set', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/v1/ai/status',
+        headers: authHeader(admin),
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.configured).toBe(false);
+    });
+  });
+
+  describe('POST /api/v1/ai/decompose', () => {
+    it('returns 422 when AI is not configured', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/ai/decompose',
+        headers: authHeader(admin),
+        payload: { title: 'Build feature X', description: 'Detailed description of feature X' },
+      });
+      expect(res.statusCode).toBe(422);
+      expect(res.json().errors.code).toBe('AI_UNAVAILABLE');
+    });
+  });
+
+  describe('POST /api/v1/ai/triage', () => {
+    it('returns 422 when AI is not configured', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/ai/triage',
+        headers: authHeader(admin),
+        payload: { title: 'Fix login bug', description: 'Users cannot log in' },
+      });
+      expect(res.statusCode).toBe(422);
+      expect(res.json().errors.code).toBe('AI_UNAVAILABLE');
+    });
+  });
+
+  describe('POST /api/v1/ai/context/:taskId', () => {
+    it('returns 404 for non-existent task', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/ai/context/00000000-0000-0000-0000-000000000000',
+        headers: authHeader(admin),
+      });
+      expect(res.statusCode).toBe(404);
+    });
+
+    it('returns 422 when AI not configured for valid task', async () => {
+      const slug = unique('ai-ctx-proj');
+      await createProject(slug);
+      const task = await createTask(slug, { title: 'AI context task', description: 'Needs context' });
+
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/v1/ai/context/${task.id}`,
+        headers: authHeader(admin),
+      });
+      expect(res.statusCode).toBe(422);
+      expect(res.json().errors.code).toBe('AI_UNAVAILABLE');
+    });
+  });
+
+  describe('POST /api/v1/ai/estimate', () => {
+    it('returns 422 when AI is not configured', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/ai/estimate',
+        headers: authHeader(admin),
+        payload: { title: 'Refactor module', description: 'Extract shared code' },
+      });
+      expect(res.statusCode).toBe(422);
+      expect(res.json().errors.code).toBe('AI_UNAVAILABLE');
+    });
+  });
+});
+
 // ─── RBAC ────────────────────────────────────────────────────────────────────
 
 describe('RBAC', () => {
