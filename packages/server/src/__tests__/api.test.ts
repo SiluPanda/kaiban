@@ -849,6 +849,158 @@ describe('Search', () => {
   });
 });
 
+// ─── Sessions ────────────────────────────────────────────────────────────────
+
+describe('Sessions', () => {
+  describe('POST /api/v1/sessions', () => {
+    it('starts a new agent session', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/sessions',
+        headers: authHeader(agent),
+        payload: { tasks: [], agentName: 'Claude Code' },
+      });
+      expect(res.statusCode).toBe(201);
+      const session = res.json().data;
+      expect(session.agentName).toBe('Claude Code');
+      expect(session.userId).toBe(agent.id);
+      expect(session.endedAt).toBeNull();
+      expect(session.startedAt).toBeDefined();
+    });
+
+    it('starts a session with task IDs', async () => {
+      const slug = unique('session-proj');
+      await createProject(slug);
+      const task = await createTask(slug, { title: 'Session task' });
+
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/sessions',
+        headers: authHeader(agent),
+        payload: { tasks: [task.id] },
+      });
+      expect(res.statusCode).toBe(201);
+      expect(res.json().data.tasksTouched).toContain(task.id);
+    });
+  });
+
+  describe('GET /api/v1/sessions', () => {
+    it('lists sessions', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/v1/sessions',
+        headers: authHeader(admin),
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  describe('GET /api/v1/sessions/:id', () => {
+    it('returns session by ID with user', async () => {
+      const createRes = await app.inject({
+        method: 'POST',
+        url: '/api/v1/sessions',
+        headers: authHeader(agent),
+        payload: { agentName: 'Test Agent' },
+      });
+      const sessionId = createRes.json().data.id;
+
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/v1/sessions/${sessionId}`,
+        headers: authHeader(admin),
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.agentName).toBe('Test Agent');
+      expect(res.json().data.user).toBeDefined();
+    });
+
+    it('returns 404 for non-existent session', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/v1/sessions/00000000-0000-0000-0000-000000000000',
+        headers: authHeader(admin),
+      });
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
+  describe('PATCH /api/v1/sessions/:id', () => {
+    it('ends a session with summary', async () => {
+      const createRes = await app.inject({
+        method: 'POST',
+        url: '/api/v1/sessions',
+        headers: authHeader(agent),
+        payload: { agentName: 'End Test' },
+      });
+      const sessionId = createRes.json().data.id;
+
+      const res = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/sessions/${sessionId}`,
+        headers: authHeader(agent),
+        payload: { summary: 'Completed work on feature X' },
+      });
+      expect(res.statusCode).toBe(200);
+      const session = res.json().data;
+      expect(session.endedAt).not.toBeNull();
+      expect(session.summary).toBe('Completed work on feature X');
+    });
+
+    it('merges tasksTouched when ending', async () => {
+      const slug = unique('merge-proj');
+      await createProject(slug);
+      const t1 = await createTask(slug, { title: 'T1' });
+      const t2 = await createTask(slug, { title: 'T2' });
+
+      const createRes = await app.inject({
+        method: 'POST',
+        url: '/api/v1/sessions',
+        headers: authHeader(agent),
+        payload: { tasks: [t1.id] },
+      });
+      const sessionId = createRes.json().data.id;
+
+      const res = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/sessions/${sessionId}`,
+        headers: authHeader(agent),
+        payload: { tasksTouched: [t2.id], summary: 'Done' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.tasksTouched).toContain(t1.id);
+      expect(res.json().data.tasksTouched).toContain(t2.id);
+    });
+
+    it('returns 400 when ending an already-ended session', async () => {
+      const createRes = await app.inject({
+        method: 'POST',
+        url: '/api/v1/sessions',
+        headers: authHeader(agent),
+        payload: {},
+      });
+      const sessionId = createRes.json().data.id;
+
+      await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/sessions/${sessionId}`,
+        headers: authHeader(agent),
+        payload: { summary: 'First end' },
+      });
+
+      const res = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/sessions/${sessionId}`,
+        headers: authHeader(agent),
+        payload: { summary: 'Second end' },
+      });
+      expect(res.statusCode).toBe(400);
+      expect(res.json().errors.code).toBe('SESSION_ENDED');
+    });
+  });
+});
+
 // ─── RBAC ────────────────────────────────────────────────────────────────────
 
 describe('RBAC', () => {
