@@ -1001,6 +1001,155 @@ describe('Sessions', () => {
   });
 });
 
+// ─── Links (GitHub Integration) ──────────────────────────────────────────────
+
+describe('Links', () => {
+  let linkSlug: string;
+  let linkTaskId: string;
+
+  beforeAll(async () => {
+    linkSlug = unique('link-proj');
+    await createProject(linkSlug);
+    const task = await createTask(linkSlug, { title: 'Task with links' });
+    linkTaskId = task.id;
+  });
+
+  describe('POST /api/v1/tasks/:id/links', () => {
+    it('links a GitHub PR to a task', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/v1/tasks/${linkTaskId}/links`,
+        headers: authHeader(member),
+        payload: {
+          provider: 'github',
+          linkType: 'pull_request',
+          externalId: 'org/repo#42',
+          externalUrl: 'https://github.com/org/repo/pull/42',
+          title: 'Fix auth flow',
+          status: 'open',
+        },
+      });
+      expect(res.statusCode).toBe(201);
+      const link = res.json().data;
+      expect(link.provider).toBe('github');
+      expect(link.linkType).toBe('pull_request');
+      expect(link.externalId).toBe('org/repo#42');
+    });
+
+    it('links a GitHub issue to a task', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/v1/tasks/${linkTaskId}/links`,
+        headers: authHeader(member),
+        payload: {
+          provider: 'github',
+          linkType: 'issue',
+          externalId: 'org/repo#10',
+          externalUrl: 'https://github.com/org/repo/issues/10',
+        },
+      });
+      expect(res.statusCode).toBe(201);
+    });
+
+    it('returns 404 for non-existent task', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/tasks/00000000-0000-0000-0000-000000000000/links',
+        headers: authHeader(member),
+        payload: {
+          provider: 'github',
+          linkType: 'issue',
+          externalId: 'org/repo#1',
+          externalUrl: 'https://github.com/org/repo/issues/1',
+        },
+      });
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
+  describe('GET /api/v1/tasks/:id/links', () => {
+    it('lists links for a task', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/v1/tasks/${linkTaskId}/links`,
+        headers: authHeader(member),
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  describe('PATCH /api/v1/links/:linkId', () => {
+    it('updates link status', async () => {
+      const createRes = await app.inject({
+        method: 'POST',
+        url: `/api/v1/tasks/${linkTaskId}/links`,
+        headers: authHeader(member),
+        payload: {
+          provider: 'github',
+          linkType: 'pull_request',
+          externalId: 'org/repo#99',
+          externalUrl: 'https://github.com/org/repo/pull/99',
+          status: 'open',
+        },
+      });
+      const linkId = createRes.json().data.id;
+
+      const res = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/links/${linkId}`,
+        headers: authHeader(member),
+        payload: { status: 'merged', title: 'Merged PR' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.status).toBe('merged');
+      expect(res.json().data.title).toBe('Merged PR');
+    });
+  });
+
+  describe('DELETE /api/v1/links/:linkId', () => {
+    it('deletes a link', async () => {
+      const createRes = await app.inject({
+        method: 'POST',
+        url: `/api/v1/tasks/${linkTaskId}/links`,
+        headers: authHeader(member),
+        payload: {
+          provider: 'github',
+          linkType: 'branch',
+          externalId: 'feature-branch',
+          externalUrl: 'https://github.com/org/repo/tree/feature-branch',
+        },
+      });
+      const linkId = createRes.json().data.id;
+
+      const res = await app.inject({
+        method: 'DELETE',
+        url: `/api/v1/links/${linkId}`,
+        headers: authHeader(member),
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.deleted).toBe(true);
+    });
+  });
+
+  describe('POST /api/v1/github/webhook', () => {
+    it('receives a PR webhook event', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/github/webhook',
+        headers: { 'x-github-event': 'pull_request' },
+        payload: {
+          action: 'closed',
+          pull_request: { number: 42, title: 'Fix auth', state: 'closed', merged: true },
+          repository: { full_name: 'org/repo' },
+        },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.received).toBe(true);
+    });
+  });
+});
+
 // ─── Webhooks ────────────────────────────────────────────────────────────────
 
 describe('Webhooks', () => {

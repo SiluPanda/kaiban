@@ -7,3 +7,4 @@ export { agentSessions, agentSessionsRelations } from './agent-sessions';
 export { labels, labelsRelations } from './labels';
 export { views, viewsRelations } from './views';
 export { webhooks, webhooksRelations, webhookDeliveries, webhookDeliveriesRelations } from './webhooks';
+export { taskLinks, taskLinksRelations } from './task-links';
