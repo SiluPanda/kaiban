@@ -4,6 +4,11 @@ function PriorityBadge({ priority }: { priority: string }) {
   return <span className={`badge badge-${priority.toLowerCase()}`}>{priority}</span>;
 }
 
+function StatusBadge({ status }: { status: string }) {
+  const label = status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  return <span className={`status-badge status-${status}`}>{label}</span>;
+}
+
 export function ListView({ tasks }: { tasks: any[] }) {
   return (
     <table className="task-table">
@@ -20,10 +25,10 @@ export function ListView({ tasks }: { tasks: any[] }) {
         {tasks.map((task) => (
           <tr key={task.id}>
             <td><Link to={`/tasks/${task.id}`}>{task.title}</Link></td>
-            <td>{task.status}</td>
+            <td><StatusBadge status={task.status} /></td>
             <td><PriorityBadge priority={task.priority} /></td>
-            <td>{task.labels?.length > 0 ? task.labels.join(', ') : '—'}</td>
-            <td style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>{new Date(task.createdAt).toLocaleDateString()}</td>
+            <td style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>{task.labels?.length > 0 ? task.labels.join(', ') : '—'}</td>
+            <td style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>{new Date(task.createdAt).toLocaleDateString()}</td>
           </tr>
         ))}
         {tasks.length === 0 && (

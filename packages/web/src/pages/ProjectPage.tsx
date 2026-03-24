@@ -39,7 +39,7 @@ export function ProjectPage() {
     <div className="app">
       <Nav />
       <div className="main">
-        {project && <h2 style={{ marginBottom: '0.5rem' }}>{project.name}</h2>}
+        {project && <h2 className="page-title">{project.name}</h2>}
         <div className="toolbar">
           <div className="tabs">
             <button className={`tab ${view === 'board' ? 'active' : ''}`} onClick={() => setView('board')}>Board</button>
@@ -64,7 +64,7 @@ export function ProjectPage() {
           </div>
         </div>
         {loading && <div className="loading">Loading tasks...</div>}
-        {error && <div className="error" style={{ color: 'var(--red)', marginBottom: '1rem' }}>{error}</div>}
+        {error && <div className="error">{error}</div>}
         {!loading && view === 'board' && <BoardView tasks={tasks} />}
         {!loading && view === 'list' && <ListView tasks={tasks} />}
       </div>

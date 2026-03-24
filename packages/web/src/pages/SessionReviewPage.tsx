@@ -31,91 +31,81 @@ export function SessionReviewPage() {
   }, [id]);
 
   if (loading) return <div className="app"><Nav /><div className="main"><div className="loading">Loading session...</div></div></div>;
-  if (!session) return <div className="app"><Nav /><div className="main"><div className="error" style={{ color: 'var(--red)' }}>{error || 'Session not found'}</div></div></div>;
+  if (!session) return <div className="app"><Nav /><div className="main"><div className="error">{error || 'Session not found'}</div></div></div>;
 
   return (
     <div className="app">
       <Nav />
       <div className="main">
-        <Link to="/activity" style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+        <Link to="/activity" className="back-link">
           Back to Activity Feed
         </Link>
 
-        <h2 style={{ marginTop: '0.75rem', marginBottom: '1rem' }}>Session Review</h2>
+        <h2 className="page-title" style={{ marginTop: '0.75rem' }}>Session Review</h2>
 
         <div style={{
           background: 'var(--bg-secondary)',
           border: '1px solid var(--border)',
-          borderRadius: 'var(--radius)',
+          borderRadius: 'var(--radius-lg)',
           padding: '1.5rem',
           marginBottom: '1.5rem',
         }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+          <div className="info-grid">
             <div>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Agent</div>
-              <div style={{ fontWeight: 600 }}>{session.agentName}</div>
+              <div className="info-item-label">Agent</div>
+              <div className="info-item-value">{session.agentName}</div>
             </div>
             <div>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>User</div>
-              <div>{session.user?.name || session.userId}</div>
+              <div className="info-item-label">User</div>
+              <div className="info-item-value">{session.user?.name || session.userId}</div>
             </div>
             <div>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Started</div>
-              <div>{new Date(session.startedAt).toLocaleString()}</div>
+              <div className="info-item-label">Started</div>
+              <div className="info-item-value">{new Date(session.startedAt).toLocaleString()}</div>
             </div>
             <div>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Ended</div>
-              <div>{session.endedAt ? new Date(session.endedAt).toLocaleString() : 'Still active'}</div>
+              <div className="info-item-label">Ended</div>
+              <div className="info-item-value">{session.endedAt ? new Date(session.endedAt).toLocaleString() : 'Still active'}</div>
             </div>
             {session.endedAt && (
               <div>
-                <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Duration</div>
-                <div>{formatDuration(session.startedAt, session.endedAt)}</div>
+                <div className="info-item-label">Duration</div>
+                <div className="info-item-value">{formatDuration(session.startedAt, session.endedAt)}</div>
               </div>
             )}
             <div>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Status</div>
+              <div className="info-item-label">Status</div>
               <div>
                 {session.endedAt ? (
-                  <span style={{ color: 'var(--green)' }}>Completed</span>
+                  <span className="session-status-badge completed">Completed</span>
                 ) : (
-                  <span style={{ color: 'var(--yellow)' }}>Active</span>
+                  <span className="session-status-badge active">Active</span>
                 )}
               </div>
             </div>
           </div>
 
           {session.summary && (
-            <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius)' }}>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginBottom: '0.25rem' }}>Summary</div>
-              <div style={{ whiteSpace: 'pre-wrap' }}>{session.summary}</div>
+            <div className="summary-block">
+              <div className="info-item-label" style={{ marginBottom: '0.25rem' }}>Summary</div>
+              <div style={{ whiteSpace: 'pre-wrap', fontSize: '0.875rem' }}>{session.summary}</div>
             </div>
           )}
         </div>
 
         {taskDetails.length > 0 && (
           <>
-            <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem' }}>Tasks Touched ({taskDetails.length})</h3>
+            <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, marginBottom: '0.75rem' }}>Tasks Touched ({taskDetails.length})</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {taskDetails.map(task => (
-                <Link key={task.id} to={`/tasks/${task.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <div style={{
-                    background: 'var(--bg-secondary)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 'var(--radius)',
-                    padding: '0.75rem 1rem',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}>
-                    <div>
-                      <div style={{ fontWeight: 500 }}>{task.title}</div>
-                      <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
-                        {task.project?.name} · {task.status}
-                      </div>
+                <Link key={task.id} to={`/tasks/${task.id}`} className="task-row-card">
+                  <div>
+                    <div style={{ fontWeight: 500, fontSize: '0.875rem' }}>{task.title}</div>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>
+                      {task.project?.name} · {task.status}
                     </div>
-                    <span className={`badge badge-${task.priority?.toLowerCase()}`}>{task.priority}</span>
                   </div>
+                  <span className={`badge badge-${task.priority?.toLowerCase()}`}>{task.priority}</span>
                 </Link>
               ))}
             </div>

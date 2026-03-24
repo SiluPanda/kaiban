@@ -25,17 +25,19 @@ export function BoardView({ tasks }: { tasks: any[] }) {
             <span>{col.label}</span>
             <span className="count">{col.tasks.length}</span>
           </div>
-          {col.tasks.map((task) => (
-            <Link key={task.id} to={`/tasks/${task.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <div className="board-card">
-                <h3>{task.title}</h3>
-                <div className="meta">
-                  <PriorityBadge priority={task.priority} />
-                  {task.labels?.length > 0 && <span>{task.labels.join(', ')}</span>}
+          <div className="board-cards">
+            {col.tasks.map((task) => (
+              <Link key={task.id} to={`/tasks/${task.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <div className="board-card">
+                  <h3>{task.title}</h3>
+                  <div className="meta">
+                    <PriorityBadge priority={task.priority} />
+                    {task.labels?.length > 0 && <span>{task.labels.join(', ')}</span>}
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
+          </div>
         </div>
       ))}
     </div>
