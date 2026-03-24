@@ -1,7 +1,7 @@
 # Task: CLI Core Commands - init, project, task CRUD, search
 
 **Phase:** 1 - Foundation (Weeks 1-4)
-**Status:** pending
+**Status:** done
 
 ## Description
 
