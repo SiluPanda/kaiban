@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { type ChildProcess, spawn } from 'node:child_process';
 import path from 'node:path';
 
 let client: Client;
@@ -95,5 +96,69 @@ describe('MCP Server', () => {
     const data = JSON.parse(content[0].text);
     expect(data.message).toBe('Session ended');
     expect(data.summary).toBe('Done testing');
+  });
+});
+
+describe('MCP HTTP Server', () => {
+  let httpProcess: ChildProcess;
+  const port = 3199;
+
+  beforeAll(async () => {
+    const httpPath = path.resolve(import.meta.dirname, '../http.ts');
+    httpProcess = spawn('npx', ['tsx', httpPath], {
+      env: { ...process.env, MCP_PORT: String(port), PITH_URL: 'http://localhost:3456', PITH_API_KEY: '' },
+      stdio: 'pipe',
+    });
+    // Wait for server to start
+    await new Promise<void>((resolve) => {
+      httpProcess.stdout?.on('data', (data: Buffer) => {
+        if (data.toString().includes('listening')) resolve();
+      });
+      setTimeout(resolve, 3000);
+    });
+  });
+
+  afterAll(() => {
+    httpProcess?.kill();
+  });
+
+  it('health endpoint returns ok', async () => {
+    const res = await fetch(`http://localhost:${port}/health`);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.status).toBe('ok');
+    expect(body.transport).toBe('http');
+  });
+
+  it('returns 404 for unknown paths', async () => {
+    const res = await fetch(`http://localhost:${port}/unknown`);
+    expect(res.status).toBe(404);
+  });
+
+  it('rejects unauthenticated requests when API key is set', async () => {
+    // Start a separate server with API key
+    const authPath = path.resolve(import.meta.dirname, '../http.ts');
+    const authPort = 3198;
+    const authProcess = spawn('npx', ['tsx', authPath], {
+      env: { ...process.env, MCP_PORT: String(authPort), PITH_API_KEY: 'test-secret' },
+      stdio: 'pipe',
+    });
+    await new Promise<void>((resolve) => {
+      authProcess.stdout?.on('data', (data: Buffer) => {
+        if (data.toString().includes('listening')) resolve();
+      });
+      setTimeout(resolve, 3000);
+    });
+
+    try {
+      const res = await fetch(`http://localhost:${authPort}/mcp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+      });
+      expect(res.status).toBe(401);
+    } finally {
+      authProcess.kill();
+    }
   });
 });
