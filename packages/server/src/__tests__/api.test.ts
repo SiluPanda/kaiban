@@ -1866,19 +1866,50 @@ describe('Links', () => {
   });
 
   describe('POST /api/v1/github/webhook', () => {
-    it('receives a PR webhook event', async () => {
+    it('receives a PR webhook event with valid signature', async () => {
+      const secret = 'test-webhook-secret';
+      const originalSecret = process.env.GITHUB_WEBHOOK_SECRET;
+      process.env.GITHUB_WEBHOOK_SECRET = secret;
+
+      const payload = JSON.stringify({
+        action: 'closed',
+        pull_request: { number: 42, title: 'Fix auth', state: 'closed', merged: true },
+        repository: { full_name: 'org/repo' },
+      });
+      const crypto = await import('node:crypto');
+      const signature = 'sha256=' + crypto.createHmac('sha256', secret).update(payload).digest('hex');
+
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/github/webhook',
+        headers: {
+          'x-github-event': 'pull_request',
+          'x-hub-signature-256': signature,
+          'content-type': 'application/json',
+        },
+        payload,
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.received).toBe(true);
+
+      // Restore
+      if (originalSecret) process.env.GITHUB_WEBHOOK_SECRET = originalSecret;
+      else delete process.env.GITHUB_WEBHOOK_SECRET;
+    });
+
+    it('rejects webhook when secret is not configured', async () => {
+      const originalSecret = process.env.GITHUB_WEBHOOK_SECRET;
+      delete process.env.GITHUB_WEBHOOK_SECRET;
+
       const res = await app.inject({
         method: 'POST',
         url: '/api/v1/github/webhook',
         headers: { 'x-github-event': 'pull_request' },
-        payload: {
-          action: 'closed',
-          pull_request: { number: 42, title: 'Fix auth', state: 'closed', merged: true },
-          repository: { full_name: 'org/repo' },
-        },
+        payload: { action: 'opened' },
       });
-      expect(res.statusCode).toBe(200);
-      expect(res.json().data.received).toBe(true);
+      expect(res.statusCode).toBe(500);
+
+      if (originalSecret) process.env.GITHUB_WEBHOOK_SECRET = originalSecret;
     });
   });
 });

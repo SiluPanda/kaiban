@@ -62,5 +62,5 @@ export function saveConfig(config: Partial<PithConfig>, global = false): void {
   }
 
   const merged = { ...existing, ...config };
-  writeFileSync(path, JSON.stringify(merged, null, 2) + '\n');
+  writeFileSync(path, JSON.stringify(merged, null, 2) + '\n', { mode: 0o600 });
 }

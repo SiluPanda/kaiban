@@ -115,6 +115,11 @@ export const viewRoutes: FastifyPluginAsync = async (fastify) => {
       return error('NOT_FOUND', 'View not found');
     }
 
+    if (existing.createdBy !== request.user.id && request.user.role !== 'admin') {
+      reply.status(403);
+      return error('FORBIDDEN', 'You can only update your own views');
+    }
+
     const updates: Record<string, unknown> = {};
     if (body.name !== undefined) updates.name = body.name;
     if (body.filters !== undefined) updates.filters = body.filters;
@@ -142,6 +147,11 @@ export const viewRoutes: FastifyPluginAsync = async (fastify) => {
     if (!existing) {
       reply.status(404);
       return error('NOT_FOUND', 'View not found');
+    }
+
+    if (existing.createdBy !== request.user.id && request.user.role !== 'admin') {
+      reply.status(403);
+      return error('FORBIDDEN', 'You can only delete your own views');
     }
 
     await db.delete(views).where(eq(views.id, id));

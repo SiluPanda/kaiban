@@ -145,7 +145,11 @@ export const githubWebhookRoutes: FastifyPluginAsync = async (fastify) => {
     config: { rawBody: true },
   }, async (request, reply) => {
     const secret = process.env.GITHUB_WEBHOOK_SECRET;
-    if (secret) {
+    if (!secret) {
+      reply.status(500);
+      return error('NOT_CONFIGURED', 'GITHUB_WEBHOOK_SECRET is not configured');
+    }
+    {
       const sig = request.headers['x-hub-signature-256'] as string | undefined;
       if (!sig) {
         reply.status(401);

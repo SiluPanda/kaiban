@@ -23,7 +23,10 @@ export const notificationRoutes: FastifyPluginAsync = async (fastify) => {
         provider: z.enum(['slack', 'discord']),
         name: z.string().min(1).max(255),
         webhookUrl: z.string().url().max(2048),
-        events: z.array(z.string()).min(1),
+        events: z.array(z.enum([
+          'task.created', 'task.updated', 'task.assigned', 'task.status_changed',
+          'comment.created', 'session.started', 'session.ended', '*',
+        ])).min(1),
       }),
       tags: ['Notifications'],
       summary: 'Create a Slack/Discord notification channel for a project',

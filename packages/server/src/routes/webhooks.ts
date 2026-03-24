@@ -29,7 +29,7 @@ export const webhookRoutes: FastifyPluginAsync = async (fastify) => {
       params: z.object({ slug: z.string() }),
       body: z.object({
         url: z.string().url().max(2048),
-        events: z.array(z.string()).min(1),
+        events: z.array(z.enum(WEBHOOK_EVENTS)).min(1),
       }),
       tags: ['Webhooks'],
       summary: 'Register a webhook for a project',

@@ -13,7 +13,7 @@ export function authorize(...allowedRoles: Role[]) {
 
     if (!allowedRoles.includes(request.user.role)) {
       reply.status(403);
-      return reply.send(error('FORBIDDEN', `Role '${request.user.role}' is not authorized for this action`));
+      return reply.send(error('FORBIDDEN', 'You are not authorized for this action'));
     }
   };
 }

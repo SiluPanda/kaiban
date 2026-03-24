@@ -98,6 +98,12 @@ export const sessionRoutes: FastifyPluginAsync = async (fastify) => {
       return error('NOT_FOUND', 'Session not found');
     }
 
+    // Only the session owner or an admin can end a session
+    if (existing.userId !== request.user.id && request.user.role !== 'admin') {
+      reply.status(403);
+      return error('FORBIDDEN', 'You can only end your own sessions');
+    }
+
     if (existing.endedAt) {
       reply.status(400);
       return error('SESSION_ENDED', 'Session has already ended');
