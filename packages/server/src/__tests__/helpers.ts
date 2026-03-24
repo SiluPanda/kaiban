@@ -33,7 +33,7 @@ export async function closeApp(): Promise<void> {
 }
 
 export async function cleanDatabase(): Promise<void> {
-  await db.execute(sql`TRUNCATE task_links, webhook_deliveries, webhooks, activities, agent_sessions, comments, views, tasks, labels, projects, users CASCADE`);
+  await db.execute(sql`TRUNCATE time_entries, task_links, webhook_deliveries, webhooks, activities, agent_sessions, comments, views, tasks, labels, projects, users CASCADE`);
 }
 
 export async function createTestUser(opts: {

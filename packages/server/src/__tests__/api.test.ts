@@ -1001,6 +1001,115 @@ describe('Sessions', () => {
   });
 });
 
+// ─── Time Tracking ───────────────────────────────────────────────────────────
+
+describe('Time Tracking', () => {
+  let timeSlug: string;
+  let timeTaskId: string;
+
+  beforeAll(async () => {
+    timeSlug = unique('time-proj');
+    await createProject(timeSlug);
+    const task = await createTask(timeSlug, { title: 'Time-tracked task' });
+    timeTaskId = task.id;
+  });
+
+  describe('POST /api/v1/tasks/:id/time', () => {
+    it('logs time against a task', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/v1/tasks/${timeTaskId}/time`,
+        headers: authHeader(member),
+        payload: { minutes: 90, description: 'Worked on implementation' },
+      });
+      expect(res.statusCode).toBe(201);
+      const entry = res.json().data;
+      expect(entry.minutes).toBe(90);
+      expect(entry.description).toBe('Worked on implementation');
+      expect(entry.userId).toBe(member.id);
+    });
+
+    it('logs time with custom date', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/v1/tasks/${timeTaskId}/time`,
+        headers: authHeader(member),
+        payload: { minutes: 60, loggedAt: '2026-03-20T10:00:00Z' },
+      });
+      expect(res.statusCode).toBe(201);
+    });
+
+    it('returns 404 for non-existent task', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/tasks/00000000-0000-0000-0000-000000000000/time',
+        headers: authHeader(member),
+        payload: { minutes: 30 },
+      });
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
+  describe('GET /api/v1/tasks/:id/time', () => {
+    it('lists time entries with total', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/v1/tasks/${timeTaskId}/time`,
+        headers: authHeader(member),
+      });
+      expect(res.statusCode).toBe(200);
+      const data = res.json().data;
+      expect(data.entries.length).toBeGreaterThanOrEqual(2);
+      expect(data.totalMinutes).toBeGreaterThanOrEqual(150);
+    });
+  });
+
+  describe('DELETE /api/v1/time/:entryId', () => {
+    it('deletes a time entry', async () => {
+      const createRes = await app.inject({
+        method: 'POST',
+        url: `/api/v1/tasks/${timeTaskId}/time`,
+        headers: authHeader(member),
+        payload: { minutes: 15, description: 'Delete me' },
+      });
+      const entryId = createRes.json().data.id;
+
+      const res = await app.inject({
+        method: 'DELETE',
+        url: `/api/v1/time/${entryId}`,
+        headers: authHeader(member),
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.deleted).toBe(true);
+    });
+  });
+
+  describe('GET /api/v1/projects/:slug/time-report', () => {
+    it('returns time report aggregated by user and task', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/v1/projects/${timeSlug}/time-report`,
+        headers: authHeader(admin),
+      });
+      expect(res.statusCode).toBe(200);
+      const data = res.json().data;
+      expect(data.totalMinutes).toBeGreaterThanOrEqual(1);
+      expect(data.totalHours).toBeDefined();
+      expect(data.byUser.length).toBeGreaterThanOrEqual(1);
+      expect(data.byTask.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('returns 404 for non-existent project', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/v1/projects/nonexistent/time-report',
+        headers: authHeader(admin),
+      });
+      expect(res.statusCode).toBe(404);
+    });
+  });
+});
+
 // ─── Views ───────────────────────────────────────────────────────────────────
 
 describe('Views', () => {
