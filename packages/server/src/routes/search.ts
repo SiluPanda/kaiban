@@ -1,10 +1,10 @@
 import { type FastifyPluginAsync } from 'fastify';
 import { type ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { db } from '@kaiban/db';
-import { tasks } from '@kaiban/db/schema';
+import { db } from '@pith/db';
+import { tasks } from '@pith/db/schema';
 import { or, ilike, count } from 'drizzle-orm';
-import { paginationSchema } from '@kaiban/core';
+import { paginationSchema } from '@pith/core';
 import { paginated } from '../lib/response';
 
 export const searchRoutes: FastifyPluginAsync = async (fastify) => {

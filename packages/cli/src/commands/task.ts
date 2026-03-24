@@ -6,7 +6,7 @@ import { getOutputFormat, printJson, printTable, printSuccess, printError, forma
 function getProject(options: { project?: string }): string {
   const project = options.project || loadConfig().project;
   if (!project) {
-    printError('No project specified. Use --project <slug> or set "project" in .kaibanrc');
+    printError('No project specified. Use --project <slug> or set "project" in .pithrc');
     process.exit(2);
   }
   return project;

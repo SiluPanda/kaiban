@@ -7,19 +7,19 @@ async function seed() {
   // Create users
   const [adminUser] = await db.insert(users).values({
     name: 'Admin User',
-    email: 'admin@kaiban.dev',
+    email: 'admin@pith.dev',
     role: 'admin',
   }).onConflictDoNothing({ target: users.email }).returning();
 
   const [memberUser] = await db.insert(users).values({
     name: 'Alice Developer',
-    email: 'alice@kaiban.dev',
+    email: 'alice@pith.dev',
     role: 'member',
   }).onConflictDoNothing({ target: users.email }).returning();
 
   const [agentUser] = await db.insert(users).values({
     name: 'Claude Code',
-    email: 'claude@agent.kaiban.dev',
+    email: 'claude@agent.pith.dev',
     role: 'agent',
   }).onConflictDoNothing({ target: users.email }).returning();
 
@@ -31,8 +31,8 @@ async function seed() {
 
   // Create project
   const [project] = await db.insert(projects).values({
-    slug: 'kaiban-dev',
-    name: 'Kaiban Development',
+    slug: 'pith-dev',
+    name: 'Pith Development',
     description: 'Building the AI-native task management system',
   }).returning();
 

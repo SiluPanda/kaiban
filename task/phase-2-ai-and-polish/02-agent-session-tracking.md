@@ -26,7 +26,7 @@ The session system supports common agent patterns:
 1. Agent calls `get_my_tasks` to see assigned work
 2. Agent calls `start_session` with the task ID
 3. Agent calls `get_context` to understand the full picture
-4. Agent does the coding work (outside Kaiban)
+4. Agent does the coding work (outside Pith)
 5. Agent calls `update_task` to set status = in_review
 6. Agent calls `add_comment` with summary of changes and PR link
 7. Agent calls `end_session` with a work summary

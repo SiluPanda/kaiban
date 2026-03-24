@@ -1,15 +1,15 @@
 {
-  "name": "@kaiban/cli",
+  "name": "@pith/cli",
   "version": "0.0.1",
   "private": true,
   "type": "module",
   "bin": {
-    "kaiban": "./src/index.ts"
+    "pith": "./src/index.ts"
   },
   "scripts": {
     "build": "tsc --build",
     "dev": "tsx src/index.ts",
-    "kaiban": "tsx src/index.ts"
+    "pith": "tsx src/index.ts"
   },
   "dependencies": {
     "commander": "^13.0.0",

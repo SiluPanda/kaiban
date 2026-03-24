@@ -3,7 +3,7 @@ import { saveConfig } from '../lib/config';
 import { printSuccess } from '../lib/output';
 
 export const initCommand = new Command('init')
-  .description('Initialize Kaiban in current directory')
+  .description('Initialize Pith in current directory')
   .option('--url <url>', 'API server URL', 'http://localhost:3456')
   .option('--key <key>', 'API key')
   .option('--project <slug>', 'Default project slug')
@@ -17,5 +17,5 @@ export const initCommand = new Command('init')
       },
       options.global,
     );
-    printSuccess(`Kaiban config written to ${options.global ? '~/' : './'}.kaibanrc`);
+    printSuccess(`Pith config written to ${options.global ? '~/' : './'}.pithrc`);
   });

@@ -5,7 +5,7 @@
 
 ## Description
 
-Add multi-tenant support to enable Kaiban as a hosted SaaS offering.
+Add multi-tenant support to enable Pith as a hosted SaaS offering.
 
 ### Requirements
 

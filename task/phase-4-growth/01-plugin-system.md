@@ -5,7 +5,7 @@
 
 ## Description
 
-Build a lightweight plugin system (planned for v2.0) for extending Kaiban with custom logic.
+Build a lightweight plugin system (planned for v2.0) for extending Pith with custom logic.
 
 ### Capabilities
 

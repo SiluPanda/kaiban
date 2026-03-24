@@ -5,13 +5,13 @@
 
 ## Description
 
-Build a GitHub integration (planned for v1.1) that connects Kaiban tasks to GitHub issues and PRs.
+Build a GitHub integration (planned for v1.1) that connects Pith tasks to GitHub issues and PRs.
 
 ### Features
 
 - Link tasks to GitHub issues and PRs
 - Auto-update task status when a linked PR is merged
-- Sync GitHub issue labels to Kaiban labels
+- Sync GitHub issue labels to Pith labels
 
 ### Deliverables
 

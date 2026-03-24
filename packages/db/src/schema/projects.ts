@@ -1,6 +1,6 @@
 import { pgTable, uuid, varchar, text, jsonb, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { DEFAULT_STATUS_FLOW } from '@kaiban/core/constants';
+import { DEFAULT_STATUS_FLOW } from '@pith/core/constants';
 import { tasks } from './tasks';
 import { labels } from './labels';
 import { views } from './views';

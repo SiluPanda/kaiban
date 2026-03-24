@@ -1,5 +1,5 @@
 {
-  "name": "kaiban",
+  "name": "pith",
   "private": true,
   "type": "module",
   "workspaces": ["packages/*"],

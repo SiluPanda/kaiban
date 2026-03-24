@@ -7,7 +7,7 @@ async function main() {
   const app = await buildApp();
 
   await app.listen({ port, host });
-  console.log(`Kaiban server running at http://${host}:${port}`);
+  console.log(`Pith server running at http://${host}:${port}`);
   console.log(`Health check: http://localhost:${port}/health`);
 }
 

@@ -1,6 +1,6 @@
 import { type FastifyRequest, type FastifyReply } from 'fastify';
-import { db } from '@kaiban/db';
-import { users } from '@kaiban/db/schema';
+import { db } from '@pith/db';
+import { users } from '@pith/db/schema';
 import { eq } from 'drizzle-orm';
 import { verifyApiKey } from '../lib/auth';
 import { verifyToken } from '../lib/jwt';

@@ -32,22 +32,22 @@ Build a fully compliant MCP tool server in `packages/mcp-server` using `@modelco
 
 ### MCP Resources to Expose
 
-- `kaiban://project/{slug}/board` -- Current board state as structured data
-- `kaiban://project/{slug}/backlog` -- Full backlog with priorities
-- `kaiban://task/{id}/context` -- Complete task context (parent, sub-tasks, comments, linked items)
-- `kaiban://user/{id}/workload` -- Current assignment load for a team member or agent
+- `pith://project/{slug}/board` -- Current board state as structured data
+- `pith://project/{slug}/backlog` -- Full backlog with priorities
+- `pith://task/{id}/context` -- Complete task context (parent, sub-tasks, comments, linked items)
+- `pith://user/{id}/workload` -- Current assignment load for a team member or agent
 
 ### Configuration Example
 
 ```json
 {
   "mcpServers": {
-    "kaiban": {
+    "pith": {
       "command": "npx",
-      "args": ["-y", "@kaiban/mcp-server"],
+      "args": ["-y", "@pith/mcp-server"],
       "env": {
-        "KAIBAN_URL": "http://localhost:3456",
-        "KAIBAN_API_KEY": "kb_..."
+        "PITH_URL": "http://localhost:3456",
+        "PITH_API_KEY": "kb_..."
       }
     }
   }

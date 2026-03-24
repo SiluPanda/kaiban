@@ -5,7 +5,7 @@
 
 ## Description
 
-Prepare for public launch of the Kaiban project.
+Prepare for public launch of the Pith project.
 
 ### Deliverables
 
@@ -17,7 +17,7 @@ Prepare for public launch of the Kaiban project.
   - MCP integration with Claude Code
   - Web UI board management
   - Agent session review
-- **Launch checklist**: Trademark validation for "Kaiban" name, social media announcements, community channels
+- **Launch checklist**: Trademark validation for "Pith" name, social media announcements, community channels
 
 ### Success Metrics Targets (6 months post-launch)
 

@@ -11,14 +11,14 @@ Build the CLI application in `packages/cli` using Commander.js. The CLI is desig
 
 | Command | Description |
 |---------|-------------|
-| `kaiban init` | Initialize Kaiban in current directory, create `.kaibanrc` config |
-| `kaiban project list` | List all projects |
-| `kaiban task list [--status STATUS] [--assignee ME] [--priority P0]` | List tasks with filters |
-| `kaiban task create "Title" [--priority P1] [--desc "..."]` | Create a task |
-| `kaiban task show TASK-123` | Show task details |
-| `kaiban task update TASK-123 --status in_progress` | Update a task |
-| `kaiban task comment TASK-123 "Comment text"` | Add a comment |
-| `kaiban search "query string"` | Full-text search |
+| `pith init` | Initialize Pith in current directory, create `.pithrc` config |
+| `pith project list` | List all projects |
+| `pith task list [--status STATUS] [--assignee ME] [--priority P0]` | List tasks with filters |
+| `pith task create "Title" [--priority P1] [--desc "..."]` | Create a task |
+| `pith task show TASK-123` | Show task details |
+| `pith task update TASK-123 --status in_progress` | Update a task |
+| `pith task comment TASK-123 "Comment text"` | Add a comment |
+| `pith search "query string"` | Full-text search |
 
 ### Agent-Friendly Design Principles
 
@@ -34,5 +34,5 @@ Build the CLI application in `packages/cli` using Commander.js. The CLI is desig
 - Commander.js CLI application scaffolding
 - All core commands listed above
 - `--json` output mode on every command
-- `.kaibanrc` config file support (API URL, API key)
+- `.pithrc` config file support (API URL, API key)
 - Human-readable table output as default

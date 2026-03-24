@@ -9,14 +9,14 @@ Build the AI integration layer in `packages/ai` using the Vercel AI SDK for prov
 
 ### Provider Configuration
 
-Users configure via environment variables or the `kaiban config` command:
+Users configure via environment variables or the `pith config` command:
 
 | Variable | Example |
 |----------|---------|
-| KAIBAN_AI_PROVIDER | anthropic, openai, google, groq, ollama, openrouter |
-| KAIBAN_AI_MODEL | claude-sonnet-4-20250514, gpt-4o, gemini-2.0-flash |
-| KAIBAN_AI_API_KEY | sk-ant-..., sk-..., (empty for Ollama) |
-| KAIBAN_AI_BASE_URL | http://localhost:11434 (for Ollama / custom endpoints) |
+| PITH_AI_PROVIDER | anthropic, openai, google, groq, ollama, openrouter |
+| PITH_AI_MODEL | claude-sonnet-4-20250514, gpt-4o, gemini-2.0-flash |
+| PITH_AI_API_KEY | sk-ant-..., sk-..., (empty for Ollama) |
+| PITH_AI_BASE_URL | http://localhost:11434 (for Ollama / custom endpoints) |
 
 Uses `@ai-sdk/anthropic`, `@ai-sdk/openai`, `@ai-sdk/google`, etc. as peer dependencies -- users install only what they need.
 

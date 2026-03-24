@@ -8,7 +8,7 @@ import { searchCommand } from './commands/search';
 const program = new Command();
 
 program
-  .name('kaiban')
+  .name('pith')
   .description('AI-Native Task Management CLI')
   .version('0.0.1');
 

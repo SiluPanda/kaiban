@@ -1,4 +1,4 @@
-# Task: npm Package Publishing - @kaiban/cli, @kaiban/mcp-server
+# Task: npm Package Publishing - @pith/cli, @pith/mcp-server
 
 **Phase:** 3 - Ecosystem (Weeks 9-12)
 **Status:** pending
@@ -9,8 +9,8 @@ Prepare and publish npm packages for the CLI and MCP server so users can install
 
 ### Packages
 
-- `@kaiban/cli` -- CLI application installable globally
-- `@kaiban/mcp-server` -- MCP server runnable via `npx -y @kaiban/mcp-server`
+- `@pith/cli` -- CLI application installable globally
+- `@pith/mcp-server` -- MCP server runnable via `npx -y @pith/mcp-server`
 
 ### Requirements
 

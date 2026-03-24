@@ -22,5 +22,5 @@ Allow users to create and save custom views with specific filter and sort config
 
 - View CRUD API endpoints
 - View management in web UI
-- CLI support for saved views (`kaiban task list --view "My View"`)
+- CLI support for saved views (`pith task list --view "My View"`)
 - Default view configuration per project

@@ -9,7 +9,7 @@ Add HTTP/SSE (Streamable HTTP) transport to the MCP server alongside the existin
 
 ### Use Case
 
-Remote agents, shared team setups, and cloud-hosted Kaiban instances. Supports stateful sessions and authentication via Bearer tokens.
+Remote agents, shared team setups, and cloud-hosted Pith instances. Supports stateful sessions and authentication via Bearer tokens.
 
 ### Requirements
 

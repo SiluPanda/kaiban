@@ -1,8 +1,8 @@
 import { type FastifyPluginAsync } from 'fastify';
 import { type ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { db } from '@kaiban/db';
-import { users } from '@kaiban/db/schema';
+import { db } from '@pith/db';
+import { users } from '@pith/db/schema';
 import { eq } from 'drizzle-orm';
 import { success, error } from '../lib/response';
 import { verifyApiKey } from '../lib/auth';

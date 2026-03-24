@@ -1,10 +1,10 @@
 import { type FastifyPluginAsync } from 'fastify';
 import { type ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { db } from '@kaiban/db';
-import { users } from '@kaiban/db/schema';
+import { db } from '@pith/db';
+import { users } from '@pith/db/schema';
 import { eq, count } from 'drizzle-orm';
-import { createUserSchema, updateUserSchema, paginationSchema, uuidSchema, userRoleSchema } from '@kaiban/core';
+import { createUserSchema, updateUserSchema, paginationSchema, uuidSchema, userRoleSchema } from '@pith/core';
 import { success, paginated, error } from '../lib/response';
 import { generateApiKey } from '../lib/auth';
 import { authenticate } from '../middleware/authenticate';

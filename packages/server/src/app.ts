@@ -8,7 +8,7 @@ import {
   jsonSchemaTransform,
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
-import { db } from '@kaiban/db';
+import { db } from '@pith/db';
 import { sql } from 'drizzle-orm';
 import { projectRoutes } from './routes/projects';
 import { taskRoutes } from './routes/tasks';
@@ -33,7 +33,7 @@ export async function buildApp() {
   await app.register(fastifySwagger, {
     openapi: {
       info: {
-        title: 'Kaiban API',
+        title: 'Pith API',
         description: 'AI-Native Task Management API',
         version: '1.0.0',
       },

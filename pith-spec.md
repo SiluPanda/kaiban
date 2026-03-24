@@ -1,4 +1,4 @@
-# Kaiban — Product Specification
+# Pith — Product Specification
 
 **AI-Native Task Management for Humans & Agents**
 
@@ -12,15 +12,15 @@ License: MIT · Bring Your Own Model & API Key
 
 ## 1. Executive Summary
 
-Kaiban is an open-source, self-hosted task management system built from the ground up for a world where AI agents are first-class team members. Unlike existing tools (Jira, Linear, Plane) that bolt AI onto traditional human-centric workflows, Kaiban treats AI agents and humans as equal participants with a unified interface: a REST API, a CLI, and MCP (Model Context Protocol) tool servers.
+Pith is an open-source, self-hosted task management system built from the ground up for a world where AI agents are first-class team members. Unlike existing tools (Jira, Linear, Plane) that bolt AI onto traditional human-centric workflows, Pith treats AI agents and humans as equal participants with a unified interface: a REST API, a CLI, and MCP (Model Context Protocol) tool servers.
 
-The core thesis: in 2026 and beyond, most engineering work will be co-performed by humans and AI coding agents (Claude Code, Codex, Devin, custom agents). These agents need to read tasks, update status, log work, create sub-tasks, and query project state — without a browser. Kaiban provides the infrastructure for this workflow natively.
+The core thesis: in 2026 and beyond, most engineering work will be co-performed by humans and AI coding agents (Claude Code, Codex, Devin, custom agents). These agents need to read tasks, update status, log work, create sub-tasks, and query project state — without a browser. Pith provides the infrastructure for this workflow natively.
 
 ### Key Differentiators
 
 - **Dual-citizen design**: Every feature works equally well for humans (via web UI) and AI agents (via MCP/CLI/API).
 - **MCP-native**: Ships as a first-class MCP server. Any MCP-compatible client (Claude Code, Claude Desktop, Cursor, Windsurf, custom agents) can manage tasks out of the box.
-- **CLI-first**: A powerful CLI (`kaiban`) that AI coding agents can invoke directly from terminal sessions.
+- **CLI-first**: A powerful CLI (`pith`) that AI coding agents can invoke directly from terminal sessions.
 - **AI-powered, not AI-dependent**: AI features (summarization, decomposition, prioritization) are optional. The tool works perfectly without any AI model configured.
 - **BYOM (Bring Your Own Model)**: Users configure their own AI provider and API key. Supports any provider via Vercel AI SDK — OpenAI, Anthropic, Google, Groq, Ollama, etc.
 - **Minimal and opinionated**: Deliberately avoids Jira's complexity. No 47 issue types, no Scrum-vs-Kanban religious wars. Simple primitives that compose well.
@@ -53,7 +53,7 @@ AI-native features in commercial tools (Linear, DevRev) lock you into specific A
 
 ### 3.1 High-Level Architecture
 
-Kaiban follows a layered architecture with clear separation between the data layer, business logic, integration layer, and presentation surfaces.
+Pith follows a layered architecture with clear separation between the data layer, business logic, integration layer, and presentation surfaces.
 
 | Layer | Technology | Responsibility |
 |-------|-----------|----------------|
@@ -61,14 +61,14 @@ Kaiban follows a layered architecture with clear separation between the data lay
 | ORM / Query | Drizzle ORM | Type-safe schema, migrations, query builder |
 | API | Fastify + Zod | REST endpoints with schema validation and auto-generated Swagger docs |
 | AI Layer | Vercel AI SDK | Model-agnostic LLM calls for optional AI features |
-| MCP Server | @modelcontextprotocol/sdk | Exposes Kaiban as an MCP tool server (stdio + HTTP/SSE) |
+| MCP Server | @modelcontextprotocol/sdk | Exposes Pith as an MCP tool server (stdio + HTTP/SSE) |
 | CLI | Commander.js | Terminal interface for humans and agents |
 | Web UI | React + Vite (optional) | Lightweight board/list view for human users |
 | Auth | API Keys + JWT | Simple, agent-friendly authentication |
 
 ### 3.2 Deployment Model
 
-Kaiban is designed for self-hosting with minimal operational overhead:
+Pith is designed for self-hosting with minimal operational overhead:
 
 - **Docker Compose (recommended)**: Single `docker compose up` brings up the API server, Postgres, and optionally the web UI. Target: under 512MB RAM for small teams.
 - **Bare metal / VM**: Node.js 20+ and PostgreSQL 16+ are the only dependencies. No Redis, no message queue, no Elasticsearch.
@@ -131,14 +131,14 @@ Agent users authenticate via API keys, identical to how human API access works. 
 
 ## 5. MCP Server Integration
 
-Kaiban ships as a fully compliant MCP tool server, exposing project management operations as MCP tools. This is the primary integration surface for AI agents.
+Pith ships as a fully compliant MCP tool server, exposing project management operations as MCP tools. This is the primary integration surface for AI agents.
 
 ### 5.1 Transport Modes
 
 | Transport | Use Case |
 |-----------|----------|
 | stdio | Local agents like Claude Code. The MCP server runs as a child process. Zero network overhead. Configured in `claude_desktop_config.json` or `.mcp.json`. |
-| HTTP/SSE (Streamable HTTP) | Remote agents, shared team setups, cloud-hosted Kaiban instances. Supports stateful sessions, authentication via Bearer tokens. |
+| HTTP/SSE (Streamable HTTP) | Remote agents, shared team setups, cloud-hosted Pith instances. Supports stateful sessions, authentication via Bearer tokens. |
 
 ### 5.2 MCP Tools Exposed
 
@@ -163,12 +163,12 @@ Each tool maps directly to a task management operation. Tools use structured inp
 
 ### 5.3 MCP Resources Exposed
 
-In addition to tools, Kaiban exposes MCP resources for passive context:
+In addition to tools, Pith exposes MCP resources for passive context:
 
-- `kaiban://project/{slug}/board` — Current board state as structured data
-- `kaiban://project/{slug}/backlog` — Full backlog with priorities
-- `kaiban://task/{id}/context` — Complete task context including parent, sub-tasks, comments, and linked items
-- `kaiban://user/{id}/workload` — Current assignment load for a team member or agent
+- `pith://project/{slug}/board` — Current board state as structured data
+- `pith://project/{slug}/backlog` — Full backlog with priorities
+- `pith://task/{id}/context` — Complete task context including parent, sub-tasks, comments, and linked items
+- `pith://user/{id}/workload` — Current assignment load for a team member or agent
 
 ### 5.4 MCP Configuration Example
 
@@ -177,12 +177,12 @@ For Claude Code or Claude Desktop, add to `.mcp.json`:
 ```json
 {
   "mcpServers": {
-    "kaiban": {
+    "pith": {
       "command": "npx",
-      "args": ["-y", "@kaiban/mcp-server"],
+      "args": ["-y", "@pith/mcp-server"],
       "env": {
-        "KAIBAN_URL": "http://localhost:3456",
-        "KAIBAN_API_KEY": "kb_..."
+        "PITH_URL": "http://localhost:3456",
+        "PITH_API_KEY": "kb_..."
       }
     }
   }
@@ -193,33 +193,33 @@ For Claude Code or Claude Desktop, add to `.mcp.json`:
 
 ## 6. CLI Design
 
-The CLI (`kaiban`) is designed for both human developers and AI agents calling shell commands. It prioritizes machine-parseable output (`--json` flag) alongside human-readable defaults.
+The CLI (`pith`) is designed for both human developers and AI agents calling shell commands. It prioritizes machine-parseable output (`--json` flag) alongside human-readable defaults.
 
 ### 6.1 Command Reference
 
 | Command | Description |
 |---------|-------------|
-| `kaiban init` | Initialize Kaiban in current directory, create `.kaibanrc` config |
-| `kaiban project list` | List all projects |
-| `kaiban task list [--status STATUS] [--assignee ME] [--priority P0]` | List tasks with filters |
-| `kaiban task create "Title" [--priority P1] [--desc "..."]` | Create a task |
-| `kaiban task show TASK-123` | Show task details |
-| `kaiban task update TASK-123 --status in_progress` | Update a task |
-| `kaiban task comment TASK-123 "Comment text"` | Add a comment |
-| `kaiban task decompose TASK-123` | AI-powered: break task into sub-tasks (requires AI config) |
-| `kaiban task context TASK-123` | Get full context for a task (for feeding into an agent) |
-| `kaiban session start [--tasks TASK-123,TASK-124]` | Start a work session |
-| `kaiban session end [--summary "..."]` | End session with summary |
-| `kaiban search "query string"` | Full-text search |
-| `kaiban config set ai.provider anthropic` | Configure AI provider |
-| `kaiban config set ai.apiKey sk-ant-...` | Set API key (stored encrypted locally) |
+| `pith init` | Initialize Pith in current directory, create `.pithrc` config |
+| `pith project list` | List all projects |
+| `pith task list [--status STATUS] [--assignee ME] [--priority P0]` | List tasks with filters |
+| `pith task create "Title" [--priority P1] [--desc "..."]` | Create a task |
+| `pith task show TASK-123` | Show task details |
+| `pith task update TASK-123 --status in_progress` | Update a task |
+| `pith task comment TASK-123 "Comment text"` | Add a comment |
+| `pith task decompose TASK-123` | AI-powered: break task into sub-tasks (requires AI config) |
+| `pith task context TASK-123` | Get full context for a task (for feeding into an agent) |
+| `pith session start [--tasks TASK-123,TASK-124]` | Start a work session |
+| `pith session end [--summary "..."]` | End session with summary |
+| `pith search "query string"` | Full-text search |
+| `pith config set ai.provider anthropic` | Configure AI provider |
+| `pith config set ai.apiKey sk-ant-...` | Set API key (stored encrypted locally) |
 
 ### 6.2 Machine-Readable Output
 
 Every command supports `--json` and `--output json|table|minimal` flags. The `--json` output is stable and versioned, suitable for piping into other tools or for AI agents to parse.
 
 ```bash
-kaiban task list --status todo --json | jq '.[].title'
+pith task list --status todo --json | jq '.[].title'
 ```
 
 ### 6.3 Agent-Friendly Design Principles
@@ -242,10 +242,10 @@ Users configure their AI provider via environment variables or the config comman
 
 | Variable | Example |
 |----------|---------|
-| `KAIBAN_AI_PROVIDER` | `anthropic` \| `openai` \| `google` \| `groq` \| `ollama` \| `openrouter` |
-| `KAIBAN_AI_MODEL` | `claude-sonnet-4-20250514` \| `gpt-4o` \| `gemini-2.0-flash` |
-| `KAIBAN_AI_API_KEY` | `sk-ant-...` \| `sk-...` \| (empty for Ollama) |
-| `KAIBAN_AI_BASE_URL` | `http://localhost:11434` (for Ollama / custom endpoints) |
+| `PITH_AI_PROVIDER` | `anthropic` \| `openai` \| `google` \| `groq` \| `ollama` \| `openrouter` |
+| `PITH_AI_MODEL` | `claude-sonnet-4-20250514` \| `gpt-4o` \| `gemini-2.0-flash` |
+| `PITH_AI_API_KEY` | `sk-ant-...` \| `sk-...` \| (empty for Ollama) |
+| `PITH_AI_BASE_URL` | `http://localhost:11434` (for Ollama / custom endpoints) |
 
 The Vercel AI SDK's provider registry pattern is used internally, allowing hot-swappable models and provider fallback chains. The system uses `@ai-sdk/anthropic`, `@ai-sdk/openai`, `@ai-sdk/google`, etc. as peer dependencies — users install only what they need.
 
@@ -350,7 +350,7 @@ The web UI is an optional, lightweight React application. It is not the primary 
 
 ## 10. Agent Workflow Patterns
 
-Kaiban is designed to support common agent workflow patterns out of the box:
+Pith is designed to support common agent workflow patterns out of the box:
 
 ### 10.1 Autonomous Coding Agent
 
@@ -359,7 +359,7 @@ An agent (e.g., Claude Code) picks up a task, works on it, and reports back:
 1. Agent calls `get_my_tasks` to see assigned work
 2. Agent calls `start_session` with the task ID
 3. Agent calls `get_context` to understand the full picture
-4. Agent does the coding work (outside Kaiban)
+4. Agent does the coding work (outside Pith)
 5. Agent calls `update_task` to set status = in_review
 6. Agent calls `add_comment` with a summary of changes and PR link
 7. Agent calls `end_session` with a work summary
@@ -384,7 +384,7 @@ An agent that reviews other agents' work:
 
 ### 10.4 Multi-Agent Orchestration
 
-Kaiban serves as the shared state layer for multi-agent systems. Multiple agents can read and write to the same project, with the activity log providing a complete audit trail. Conflict resolution is last-write-wins at the field level, with the activity log preserving the full history.
+Pith serves as the shared state layer for multi-agent systems. Multiple agents can read and write to the same project, with the activity log providing a complete audit trail. Conflict resolution is last-write-wins at the field level, with the activity log preserving the full history.
 
 ---
 
@@ -413,7 +413,7 @@ Kaiban serves as the shared state layer for multi-agent systems. Multiple agents
 The project uses a monorepo managed with npm workspaces (or Turborepo for build orchestration):
 
 ```
-kaiban/
+pith/
 ├── packages/
 │   ├── core/           # Shared types, schemas (Zod), constants
 │   ├── db/             # Drizzle schema, migrations, seed data
@@ -465,7 +465,7 @@ Simple RBAC with three roles:
 
 ### 14.1 Webhooks
 
-Kaiban fires webhooks on key events, enabling integration with external systems:
+Pith fires webhooks on key events, enabling integration with external systems:
 
 - `task.created`, `task.updated`, `task.deleted`
 - `comment.created`
@@ -478,11 +478,11 @@ Webhook payloads are signed with HMAC-SHA256 for verification.
 
 - Link tasks to GitHub issues and PRs
 - Auto-update task status when a linked PR is merged
-- Sync GitHub issue labels to Kaiban labels
+- Sync GitHub issue labels to Pith labels
 
 ### 14.3 Plugin System (v2.0)
 
-Future: a lightweight plugin system for extending Kaiban with custom logic, additional MCP tools, custom AI prompts, and third-party integrations.
+Future: a lightweight plugin system for extending Pith with custom logic, additional MCP tools, custom AI prompts, and third-party integrations.
 
 ---
 
@@ -515,7 +515,7 @@ Future: a lightweight plugin system for extending Kaiban with custom logic, addi
 - Summary generation and project analytics
 - Duplicate detection
 - Performance optimization and load testing
-- npm packages published: @kaiban/cli, @kaiban/mcp-server
+- npm packages published: @pith/cli, @pith/mcp-server
 - Launch: GitHub repo, docs site, demo video
 
 ### Phase 4: Growth (Post-Launch)
@@ -538,9 +538,9 @@ Future: a lightweight plugin system for extending Kaiban with custom logic, addi
 | DevRev | No | Yes | No | Partial |
 | OpenProject | Yes | No | No | No |
 | Huly | Yes | Minimal | No | No |
-| **Kaiban** | **Yes** | **Core** | **Yes (native)** | **Yes (core)** |
+| **Pith** | **Yes** | **Core** | **Yes (native)** | **Yes (core)** |
 
-Kaiban's positioning: The only open-source task management tool where AI agents are a first-class user persona, with native MCP support and a CLI designed for programmatic access. Not competing on feature count — competing on agent ergonomics.
+Pith's positioning: The only open-source task management tool where AI agents are a first-class user persona, with native MCP support and a CLI designed for programmatic access. Not competing on feature count — competing on agent ergonomics.
 
 ---
 
@@ -560,7 +560,7 @@ Kaiban's positioning: The only open-source task management tool where AI agents 
 
 ## 18. Naming Note
 
-"Kaiban" (改版) derives from the Japanese term for visual signboard, the origin of "Kanban" methodology. The "kai" (改) means "change/reform" — fitting for a tool that reforms task management for the AI era. The name is a working title and should be validated for trademark conflicts before launch. Alternative candidates: Taskflow, Agentboard, Workhive, Pylon.
+"Pith" refers to the essential core of something — the central, most important part. In botany, pith is the spongy tissue at the center of a stem that provides structure and nourishment. The name reflects the project's role as the essential core layer that connects humans and AI agents in their shared work. Short, memorable, and easy to type in a terminal.
 
 ---
 

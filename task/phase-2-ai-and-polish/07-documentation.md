@@ -11,11 +11,11 @@ Write comprehensive documentation in the `docs/` directory and root README.
 
 - **README.md**: Project overview, quick start, feature highlights, architecture diagram, badges
 - **Setup Guide**: Step-by-step instructions for Docker Compose, bare metal, and development setup
-- **MCP Integration Guide**: How to configure Kaiban as an MCP server for Claude Code, Claude Desktop, Cursor, Windsurf, and custom agents
+- **MCP Integration Guide**: How to configure Pith as an MCP server for Claude Code, Claude Desktop, Cursor, Windsurf, and custom agents
 - **CLI Reference**: Full command reference with examples
 - **API Reference**: REST API endpoints, authentication, response format, error codes
 - **AI Configuration Guide**: How to configure AI providers (Anthropic, OpenAI, Google, Groq, Ollama, OpenRouter)
-- **CLAUDE.md**: Agent instructions for contributing to the Kaiban codebase
+- **CLAUDE.md**: Agent instructions for contributing to the Pith codebase
 
 ### Deliverables
 

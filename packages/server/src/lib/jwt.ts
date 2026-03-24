@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'kaiban-dev-secret-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'pith-dev-secret-change-in-production';
 const ACCESS_TOKEN_EXPIRY = '15m';
 const REFRESH_TOKEN_EXPIRY = '7d';
 
