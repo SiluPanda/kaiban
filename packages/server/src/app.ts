@@ -27,6 +27,7 @@ import { viewRoutes } from './routes/views';
 import { timeTrackingRoutes } from './routes/time-tracking';
 import { pluginRoutes } from './routes/plugins';
 import { notificationRoutes } from './routes/notifications';
+import { tenantRoutes } from './routes/tenants';
 import { pluginRegistry } from './plugins/registry';
 import { examplePlugin } from './plugins/example-plugin';
 
@@ -87,6 +88,7 @@ export async function buildApp() {
   await app.register(timeTrackingRoutes, { prefix: '/api/v1' });
   await app.register(notificationRoutes, { prefix: '/api/v1' });
   await app.register(pluginRoutes, { prefix: '/api/v1' });
+  await app.register(tenantRoutes, { prefix: '/api/v1' });
 
   // Load plugins
   pluginRegistry.register(examplePlugin);

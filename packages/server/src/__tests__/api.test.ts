@@ -1001,6 +1001,151 @@ describe('Sessions', () => {
   });
 });
 
+// ─── Tenants (Multi-Tenant SaaS) ─────────────────────────────────────────────
+
+describe('Tenants', () => {
+  describe('POST /api/v1/tenants', () => {
+    it('creates a tenant (admin only)', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/tenants',
+        headers: authHeader(admin),
+        payload: { slug: unique('tenant'), name: 'Acme Corp', plan: 'pro', billingEmail: 'billing@acme.com' },
+      });
+      expect(res.statusCode).toBe(201);
+      const t = res.json().data;
+      expect(t.name).toBe('Acme Corp');
+      expect(t.plan).toBe('pro');
+      expect(t.active).toBe(true);
+    });
+
+    it('returns 409 for duplicate slug', async () => {
+      const slug = unique('dup-tenant');
+      await app.inject({
+        method: 'POST',
+        url: '/api/v1/tenants',
+        headers: authHeader(admin),
+        payload: { slug, name: 'First' },
+      });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/tenants',
+        headers: authHeader(admin),
+        payload: { slug, name: 'Second' },
+      });
+      expect(res.statusCode).toBe(409);
+    });
+
+    it('returns 403 for non-admin', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/tenants',
+        headers: authHeader(member),
+        payload: { slug: 'nope', name: 'Nope' },
+      });
+      expect(res.statusCode).toBe(403);
+    });
+  });
+
+  describe('GET /api/v1/tenants', () => {
+    it('lists tenants (admin only)', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/v1/tenants',
+        headers: authHeader(admin),
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  describe('GET /api/v1/tenants/:id', () => {
+    it('returns tenant with members', async () => {
+      const createRes = await app.inject({
+        method: 'POST',
+        url: '/api/v1/tenants',
+        headers: authHeader(admin),
+        payload: { slug: unique('get-tenant'), name: 'Get Tenant' },
+      });
+      const tenantId = createRes.json().data.id;
+
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/v1/tenants/${tenantId}`,
+        headers: authHeader(admin),
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.name).toBe('Get Tenant');
+      expect(res.json().data.members).toBeDefined();
+      expect(res.json().data.members.length).toBeGreaterThanOrEqual(1); // owner added on create
+    });
+  });
+
+  describe('PATCH /api/v1/tenants/:id', () => {
+    it('updates tenant plan and settings', async () => {
+      const createRes = await app.inject({
+        method: 'POST',
+        url: '/api/v1/tenants',
+        headers: authHeader(admin),
+        payload: { slug: unique('upd-tenant'), name: 'Update Me' },
+      });
+      const tenantId = createRes.json().data.id;
+
+      const res = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/tenants/${tenantId}`,
+        headers: authHeader(admin),
+        payload: { plan: 'enterprise', maxUsers: '100' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.plan).toBe('enterprise');
+      expect(res.json().data.maxUsers).toBe('100');
+    });
+  });
+
+  describe('POST /api/v1/tenants/:id/members', () => {
+    it('adds a member to a tenant', async () => {
+      const createRes = await app.inject({
+        method: 'POST',
+        url: '/api/v1/tenants',
+        headers: authHeader(admin),
+        payload: { slug: unique('mem-tenant'), name: 'Member Tenant' },
+      });
+      const tenantId = createRes.json().data.id;
+
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/v1/tenants/${tenantId}/members`,
+        headers: authHeader(admin),
+        payload: { userId: member.id, role: 'member' },
+      });
+      expect(res.statusCode).toBe(201);
+      expect(res.json().data.userId).toBe(member.id);
+      expect(res.json().data.role).toBe('member');
+    });
+  });
+
+  describe('DELETE /api/v1/tenants/:id', () => {
+    it('deletes a tenant', async () => {
+      const createRes = await app.inject({
+        method: 'POST',
+        url: '/api/v1/tenants',
+        headers: authHeader(admin),
+        payload: { slug: unique('del-tenant'), name: 'Delete Me' },
+      });
+      const tenantId = createRes.json().data.id;
+
+      const res = await app.inject({
+        method: 'DELETE',
+        url: `/api/v1/tenants/${tenantId}`,
+        headers: authHeader(admin),
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.deleted).toBe(true);
+    });
+  });
+});
+
 // ─── Notifications (Slack/Discord) ───────────────────────────────────────────
 
 describe('Notifications', () => {

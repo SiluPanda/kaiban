@@ -10,3 +10,4 @@ export { webhooks, webhooksRelations, webhookDeliveries, webhookDeliveriesRelati
 export { taskLinks, taskLinksRelations } from './task-links';
 export { timeEntries, timeEntriesRelations } from './time-entries';
 export { notificationChannels, notificationChannelsRelations } from './notification-channels';
+export { tenants, tenantMembers, tenantsRelations, tenantMembersRelations } from './tenants';
