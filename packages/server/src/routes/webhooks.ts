@@ -7,6 +7,7 @@ import { webhooks, webhookDeliveries, projects } from '@pith/db/schema';
 import { eq, and, count, desc } from 'drizzle-orm';
 import { uuidSchema, paginationSchema } from '@pith/core';
 import { success, paginated, error } from '../lib/response';
+import { validateExternalUrl } from '../lib/url-validation';
 import { authenticate } from '../middleware/authenticate';
 import { authorize } from '../middleware/authorize';
 
@@ -43,6 +44,12 @@ export const webhookRoutes: FastifyPluginAsync = async (fastify) => {
     if (!project) {
       reply.status(404);
       return error('NOT_FOUND', 'Project not found');
+    }
+
+    const urlCheck = validateExternalUrl(url);
+    if (!urlCheck.valid) {
+      reply.status(400);
+      return error('INVALID_URL', urlCheck.reason!);
     }
 
     const secret = crypto.randomBytes(32).toString('hex');

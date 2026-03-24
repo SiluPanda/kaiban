@@ -2,7 +2,7 @@ import { type FastifyPluginAsync } from 'fastify';
 import { type ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { db } from '@pith/db';
-import { tenants, tenantMembers } from '@pith/db/schema';
+import { tenants, tenantMembers, users } from '@pith/db/schema';
 import { eq, count } from 'drizzle-orm';
 import { uuidSchema, paginationSchema } from '@pith/core';
 import { success, paginated, error } from '../lib/response';
@@ -164,6 +164,12 @@ export const tenantRoutes: FastifyPluginAsync = async (fastify) => {
     if (!existing) {
       reply.status(404);
       return error('NOT_FOUND', 'Tenant not found');
+    }
+
+    const [user] = await db.select({ id: users.id }).from(users).where(eq(users.id, userId)).limit(1);
+    if (!user) {
+      reply.status(404);
+      return error('NOT_FOUND', 'User not found');
     }
 
     const [member] = await db.insert(tenantMembers).values({

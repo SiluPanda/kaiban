@@ -6,6 +6,7 @@ import { notificationChannels, projects } from '@pith/db/schema';
 import { eq, count } from 'drizzle-orm';
 import { uuidSchema, paginationSchema } from '@pith/core';
 import { success, paginated, error } from '../lib/response';
+import { validateExternalUrl } from '../lib/url-validation';
 import { authenticate } from '../middleware/authenticate';
 import { authorize } from '../middleware/authorize';
 import { formatSlackMessage, formatDiscordMessage, type NotificationEvent } from '../lib/notifications';
@@ -40,6 +41,12 @@ export const notificationRoutes: FastifyPluginAsync = async (fastify) => {
     if (!project) {
       reply.status(404);
       return error('NOT_FOUND', 'Project not found');
+    }
+
+    const urlCheck = validateExternalUrl(body.webhookUrl);
+    if (!urlCheck.valid) {
+      reply.status(400);
+      return error('INVALID_URL', urlCheck.reason!);
     }
 
     const [channel] = await db.insert(notificationChannels).values({
@@ -115,7 +122,10 @@ export const notificationRoutes: FastifyPluginAsync = async (fastify) => {
       params: z.object({ id: uuidSchema }),
       body: z.object({
         active: z.boolean().optional(),
-        events: z.array(z.string()).optional(),
+        events: z.array(z.enum([
+          'task.created', 'task.updated', 'task.assigned', 'task.status_changed',
+          'comment.created', 'session.started', 'session.ended', '*',
+        ])).optional(),
         name: z.string().min(1).max(255).optional(),
       }),
       tags: ['Notifications'],

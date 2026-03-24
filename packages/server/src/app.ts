@@ -58,9 +58,11 @@ export async function buildApp() {
     transform: jsonSchemaTransform,
   });
 
-  await app.register(fastifySwaggerUi, {
-    routePrefix: '/docs',
-  });
+  if (process.env.NODE_ENV !== 'production') {
+    await app.register(fastifySwaggerUi, {
+      routePrefix: '/docs',
+    });
+  }
 
   // Health check
   app.get('/health', async (_request, reply) => {

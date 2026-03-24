@@ -33,19 +33,22 @@ export const commentRoutes: FastifyPluginAsync = async (fastify) => {
       return error('NOT_FOUND', 'Task not found');
     }
 
-    const [comment] = await db.insert(comments).values({
-      taskId: id,
-      body: commentBody,
-      authorId: request.user.id,
-      authorType: request.user.role === 'agent' ? 'agent' as const : 'human' as const,
-    }).returning();
+    const comment = await db.transaction(async (tx) => {
+      const [created] = await tx.insert(comments).values({
+        taskId: id,
+        body: commentBody,
+        authorId: request.user.id,
+        authorType: request.user.role === 'agent' ? 'agent' as const : 'human' as const,
+      }).returning();
 
-    // Log activity
-    await db.insert(activities).values({
-      taskId: id,
-      actorId: request.user.id,
-      actorType: request.user.role === 'agent' ? 'agent' as const : 'human' as const,
-      action: 'commented',
+      await tx.insert(activities).values({
+        taskId: id,
+        actorId: request.user.id,
+        actorType: request.user.role === 'agent' ? 'agent' as const : 'human' as const,
+        action: 'commented',
+      });
+
+      return created;
     });
 
     reply.status(201);
