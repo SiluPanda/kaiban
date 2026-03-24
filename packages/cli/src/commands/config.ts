@@ -48,14 +48,18 @@ configCommand
 configCommand
   .command('get')
   .description('Get a configuration value')
-  .argument('<key>', 'Config key')
+  .argument('<key>', 'Config key (apiUrl, apiKey, project)')
   .action((key) => {
-    const config = loadConfig() as any;
-    const val = config[key];
+    const config = loadConfig();
+    if (!Object.prototype.hasOwnProperty.call(config, key)) {
+      printError(`Unknown key: ${key}. Valid keys: apiUrl, apiKey, project`);
+      process.exit(1);
+    }
+    const val = config[key as keyof typeof config];
     if (val !== undefined) {
       console.log(val);
     } else {
-      printError(`Unknown or unset key: ${key}`);
+      printError(`Key "${key}" is not set`);
       process.exit(1);
     }
   });
