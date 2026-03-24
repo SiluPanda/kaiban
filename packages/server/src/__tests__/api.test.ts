@@ -1001,6 +1001,72 @@ describe('Sessions', () => {
   });
 });
 
+// ─── Analytics ───────────────────────────────────────────────────────────────
+
+describe('Analytics', () => {
+  let analyticsSlug: string;
+
+  beforeAll(async () => {
+    analyticsSlug = unique('analytics-proj');
+    await createProject(analyticsSlug);
+    await createTask(analyticsSlug, { title: 'A1', status: 'backlog', priority: 'P0' });
+    await createTask(analyticsSlug, { title: 'A2', status: 'todo', priority: 'P1' });
+    await createTask(analyticsSlug, { title: 'A3', status: 'in_progress', priority: 'P2' });
+  });
+
+  describe('GET /api/v1/projects/:slug/analytics', () => {
+    it('returns project analytics', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/v1/projects/${analyticsSlug}/analytics`,
+        headers: authHeader(admin),
+      });
+      expect(res.statusCode).toBe(200);
+      const data = res.json().data;
+      expect(data.totals.tasks).toBe(3);
+      expect(data.totals.byStatus).toBeDefined();
+      expect(data.totals.byPriority).toBeDefined();
+      expect(data.velocity).toBeDefined();
+      expect(data.activity).toBeDefined();
+    });
+
+    it('returns 404 for non-existent project', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/v1/projects/nonexistent/analytics',
+        headers: authHeader(admin),
+      });
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
+  describe('POST /api/v1/projects/:slug/summary', () => {
+    it('returns a summary (fallback without AI)', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/v1/projects/${analyticsSlug}/summary`,
+        headers: authHeader(admin),
+        payload: { days: 30 },
+      });
+      expect(res.statusCode).toBe(200);
+      const data = res.json().data;
+      expect(data.summary).toBeDefined();
+      expect(data.aiGenerated).toBe(false);
+      expect(data.period.days).toBe(30);
+    });
+
+    it('returns 404 for non-existent project', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/projects/nonexistent/summary',
+        headers: authHeader(admin),
+        payload: { days: 7 },
+      });
+      expect(res.statusCode).toBe(404);
+    });
+  });
+});
+
 // ─── Links (GitHub Integration) ──────────────────────────────────────────────
 
 describe('Links', () => {
