@@ -249,6 +249,83 @@ taskCommand
     }
   });
 
+// task decompose (AI)
+taskCommand
+  .command('decompose')
+  .description('AI-powered task decomposition into subtasks')
+  .argument('<id>', 'Task ID to decompose')
+  .option('--json', 'Output as JSON')
+  .action(async (id, options) => {
+    try {
+      const format = getOutputFormat(options);
+      const taskResult = await api<any>(`/api/v1/tasks/${id}`);
+      const task = taskResult.data;
+
+      const result = await api<any>('/api/v1/ai/decompose', {
+        method: 'POST',
+        body: { title: task.title, description: task.description || '' },
+      });
+
+      if (format === 'json') {
+        printJson(result);
+        return;
+      }
+
+      const data = result.data;
+      console.log(`\nDecomposition for: ${task.title}`);
+      console.log(`Reasoning: ${data.reasoning}\n`);
+      printTable(
+        ['#', 'TITLE', 'PRIORITY', 'ESTIMATE'],
+        data.subtasks.map((st: any, i: number) => [
+          String(i + 1),
+          truncate(st.title, 50),
+          formatPriority(st.priority),
+          st.estimate,
+        ]),
+      );
+    } catch (err) {
+      if (err instanceof ApiError) {
+        printError(`${err.code}: ${err.message}`);
+        process.exit(1);
+      }
+      throw err;
+    }
+  });
+
+// task context (AI)
+taskCommand
+  .command('context')
+  .description('AI-powered context assembly for a task')
+  .argument('<id>', 'Task ID')
+  .option('--json', 'Output as JSON')
+  .action(async (id, options) => {
+    try {
+      const format = getOutputFormat(options);
+      const result = await api<any>(`/api/v1/ai/context/${id}`, { method: 'POST' });
+
+      if (format === 'json') {
+        printJson(result);
+        return;
+      }
+
+      const data = result.data;
+      console.log(`\nSummary: ${data.summary}`);
+      console.log(`\nKey Points:`);
+      for (const p of data.keyPoints) console.log(`  • ${p}`);
+      console.log(`\nSuggested Approach: ${data.suggestedApproach}`);
+      if (data.risks.length > 0) {
+        console.log(`\nRisks:`);
+        for (const r of data.risks) console.log(`  ⚠ ${r}`);
+      }
+    } catch (err) {
+      if (err instanceof ApiError) {
+        printError(`${err.code}: ${err.message}`);
+        process.exit(1);
+      }
+      throw err;
+    }
+  });
+
 // task comment
 taskCommand
   .command('comment')
