@@ -50,6 +50,11 @@ export const taskRoutes: FastifyPluginAsync = async (fastify) => {
       )!);
     }
 
+    // Filter by label at the SQL level using array contains
+    if (label) {
+      conditions.push(sql`${tasks.labels} @> ARRAY[${label}]::text[]`);
+    }
+
     const where = and(...conditions);
 
     const [items, [{ total }]] = await Promise.all([
@@ -57,12 +62,7 @@ export const taskRoutes: FastifyPluginAsync = async (fastify) => {
       db.select({ total: count() }).from(tasks).where(where),
     ]);
 
-    // Filter by label in JS (text array — can't easily filter with drizzle)
-    const filtered = label
-      ? items.filter((t) => t.labels.includes(label))
-      : items;
-
-    return paginated(filtered, total, limit, offset);
+    return paginated(items, total, limit, offset);
   });
 
   // POST /api/v1/projects/:slug/tasks — Create task

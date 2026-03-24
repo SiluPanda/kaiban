@@ -41,7 +41,10 @@ export async function buildApp() {
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
 
-  await app.register(cors);
+  await app.register(cors, {
+    origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:5173'],
+    credentials: true,
+  });
 
   await app.register(fastifySwagger, {
     openapi: {
@@ -60,11 +63,12 @@ export async function buildApp() {
   });
 
   // Health check
-  app.get('/health', async () => {
+  app.get('/health', async (_request, reply) => {
     try {
       await db.execute(sql`SELECT 1`);
       return { status: 'ok', database: 'connected' };
     } catch {
+      reply.status(503);
       return { status: 'error', database: 'disconnected' };
     }
   });

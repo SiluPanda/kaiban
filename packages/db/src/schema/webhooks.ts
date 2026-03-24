@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, timestamp, boolean, jsonb, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, integer, timestamp, boolean, jsonb, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { projects } from './projects';
 
@@ -29,7 +29,7 @@ export const webhookDeliveries = pgTable('webhook_deliveries', {
   statusCode: varchar('status_code', { length: 10 }),
   responseBody: text('response_body'),
   success: boolean('success').notNull().default(false),
-  attempts: varchar('attempts', { length: 10 }).notNull().default('1'),
+  attempts: integer('attempts').notNull().default(1),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
   index('webhook_deliveries_webhook_id_idx').on(table.webhookId),

@@ -6,9 +6,12 @@ import { activities, tasks } from '@pith/db/schema';
 import { eq, count, desc } from 'drizzle-orm';
 import { paginationSchema, uuidSchema } from '@pith/core';
 import { paginated, error } from '../lib/response';
+import { authenticate } from '../middleware/authenticate';
 
 export const activityRoutes: FastifyPluginAsync = async (fastify) => {
   const app = fastify.withTypeProvider<ZodTypeProvider>();
+
+  app.addHook('preHandler', authenticate);
 
   // GET /api/v1/tasks/:id/activity — Get activity log for a task
   app.get('/tasks/:id/activity', {

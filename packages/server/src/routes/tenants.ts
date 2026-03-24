@@ -22,8 +22,8 @@ export const tenantRoutes: FastifyPluginAsync = async (fastify) => {
         name: z.string().min(1).max(255),
         plan: z.enum(['free', 'pro', 'enterprise']).default('free'),
         billingEmail: z.string().email().optional(),
-        maxUsers: z.string().optional(),
-        maxProjects: z.string().optional(),
+        maxUsers: z.number().int().min(1).optional(),
+        maxProjects: z.number().int().min(1).optional(),
       }),
       tags: ['Tenants'],
       summary: 'Create a new tenant (SaaS mode)',
@@ -43,8 +43,8 @@ export const tenantRoutes: FastifyPluginAsync = async (fastify) => {
       name: body.name,
       plan: body.plan,
       billingEmail: body.billingEmail ?? null,
-      maxUsers: body.maxUsers ?? '10',
-      maxProjects: body.maxProjects ?? '5',
+      maxUsers: body.maxUsers ?? 10,
+      maxProjects: body.maxProjects ?? 5,
     }).returning();
 
     // Add the creating user as owner
@@ -110,8 +110,8 @@ export const tenantRoutes: FastifyPluginAsync = async (fastify) => {
         plan: z.enum(['free', 'pro', 'enterprise']).optional(),
         active: z.boolean().optional(),
         billingEmail: z.string().email().optional(),
-        maxUsers: z.string().optional(),
-        maxProjects: z.string().optional(),
+        maxUsers: z.number().int().min(1).optional(),
+        maxProjects: z.number().int().min(1).optional(),
         settings: z.record(z.unknown()).optional(),
       }),
       tags: ['Tenants'],
@@ -146,7 +146,7 @@ export const tenantRoutes: FastifyPluginAsync = async (fastify) => {
     schema: {
       params: z.object({ id: uuidSchema }),
       body: z.object({
-        userId: z.string().min(1),
+        userId: uuidSchema,
         role: z.enum(['owner', 'admin', 'member']).default('member'),
       }),
       tags: ['Tenants'],

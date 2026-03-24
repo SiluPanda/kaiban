@@ -66,6 +66,10 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     try {
       const payload = verifyToken(refreshToken);
+      if (payload.type !== 'refresh') {
+        reply.status(401);
+        return error('INVALID_TOKEN', 'Expected a refresh token');
+      }
       const [user] = await db.select().from(users).where(eq(users.id, payload.userId)).limit(1);
       if (!user) {
         reply.status(401);

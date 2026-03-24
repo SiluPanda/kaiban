@@ -1,7 +1,7 @@
 import { type FastifyRequest, type FastifyReply } from 'fastify';
 import { db } from '@pith/db';
 import { users } from '@pith/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, isNotNull } from 'drizzle-orm';
 import { verifyApiKey } from '../lib/auth';
 import { verifyToken } from '../lib/jwt';
 import { error } from '../lib/response';
@@ -30,11 +30,10 @@ export async function authenticate(request: FastifyRequest, reply: FastifyReply)
 
   // Try API key first (starts with kb_)
   if (token.startsWith('kb_')) {
-    // Find user by checking all API key hashes
-    // For performance, in production you'd index a key prefix or use a lookup table
-    const allUsers = await db.select().from(users);
-    for (const user of allUsers) {
-      if (user.apiKeyHash && await verifyApiKey(token, user.apiKeyHash)) {
+    // Only load users that actually have an API key set
+    const usersWithKeys = await db.select().from(users).where(isNotNull(users.apiKeyHash));
+    for (const user of usersWithKeys) {
+      if (await verifyApiKey(token, user.apiKeyHash!)) {
         request.user = {
           id: user.id,
           name: user.name,

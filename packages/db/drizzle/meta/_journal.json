@@ -8,6 +8,13 @@
       "when": 1774318182058,
       "tag": "20260324020942_watery_krista_starr",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1774318200000,
+      "tag": "20260324021000_pg_trgm_indexes",
+      "breakpoints": true
     }
   ]
 }

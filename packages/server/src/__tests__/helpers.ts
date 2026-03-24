@@ -41,7 +41,7 @@ export async function createTestUser(opts: {
   email: string;
   role: 'admin' | 'member' | 'agent';
 }): Promise<TestUser> {
-  const { raw: apiKey, hash: apiKeyHash } = generateApiKey();
+  const { raw: apiKey, hash: apiKeyHash } = await generateApiKey();
 
   const [user] = await db.insert(users).values({
     name: opts.name,

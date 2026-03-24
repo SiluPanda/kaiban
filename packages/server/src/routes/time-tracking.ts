@@ -92,6 +92,12 @@ export const timeTrackingRoutes: FastifyPluginAsync = async (fastify) => {
       return error('NOT_FOUND', 'Time entry not found');
     }
 
+    // Only the owner or an admin can delete a time entry
+    if (existing.userId !== request.user.id && request.user.role !== 'admin') {
+      reply.status(403);
+      return error('FORBIDDEN', 'You can only delete your own time entries');
+    }
+
     await db.delete(timeEntries).where(eq(timeEntries.id, entryId));
     return success({ deleted: true });
   });

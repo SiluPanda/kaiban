@@ -1,13 +1,19 @@
 #!/usr/bin/env node
 import { createServer as createHttpServer } from 'node:http';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { createServer } from './server.js';
 
 const PORT = parseInt(process.env.MCP_PORT || '3100', 10);
 const API_KEY = process.env.PITH_API_KEY || '';
+const MAX_SESSIONS = 100;
+const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
-const sessions = new Map<string, { server: ReturnType<typeof createServer>; transport: StreamableHTTPServerTransport }>();
+if (!API_KEY) {
+  console.warn('WARNING: PITH_API_KEY is not set. MCP HTTP server has no authentication.');
+}
+
+const sessions = new Map<string, { server: ReturnType<typeof createServer>; transport: StreamableHTTPServerTransport; timer: ReturnType<typeof setTimeout> }>();
 
 const httpServer = createHttpServer(async (req, res) => {
   const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
@@ -29,7 +35,10 @@ const httpServer = createHttpServer(async (req, res) => {
   // Bearer token auth
   if (API_KEY) {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ') || authHeader.slice(7) !== API_KEY) {
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    const tokenBuf = Buffer.from(token);
+    const keyBuf = Buffer.from(API_KEY);
+    if (!token || tokenBuf.length !== keyBuf.length || !timingSafeEqual(tokenBuf, keyBuf)) {
       res.writeHead(401, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Unauthorized' }));
       return;
@@ -47,6 +56,12 @@ const httpServer = createHttpServer(async (req, res) => {
 
   // New session for initialization requests
   if (req.method === 'POST' && !sessionId) {
+    if (sessions.size >= MAX_SESSIONS) {
+      res.writeHead(503, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Too many active sessions' }));
+      return;
+    }
+
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: () => randomUUID(),
     });
@@ -57,14 +72,22 @@ const httpServer = createHttpServer(async (req, res) => {
     // Store session on successful init
     transport.onclose = () => {
       const sid = transport.sessionId;
-      if (sid) sessions.delete(sid);
+      if (sid) {
+        const session = sessions.get(sid);
+        if (session) clearTimeout(session.timer);
+        sessions.delete(sid);
+      }
     };
 
     await transport.handleRequest(req, res);
 
     const sid = transport.sessionId;
     if (sid) {
-      sessions.set(sid, { server, transport });
+      const timer = setTimeout(() => {
+        sessions.delete(sid);
+        transport.close?.();
+      }, SESSION_TTL_MS);
+      sessions.set(sid, { server, transport, timer });
     }
     return;
   }

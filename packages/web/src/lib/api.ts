@@ -1,8 +1,7 @@
-const API_KEY = localStorage.getItem('pith_api_key') || '';
-
 async function request(method: string, path: string, body?: unknown) {
+  const apiKey = localStorage.getItem('pith_api_key') || '';
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (API_KEY) headers['Authorization'] = `Bearer ${API_KEY}`;
+  if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
 
   const res = await fetch(path, {
     method,

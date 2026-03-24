@@ -816,6 +816,7 @@ describe('Search', () => {
       const res = await app.inject({
         method: 'GET',
         url: '/api/v1/search?q=authentication%20flow',
+        headers: authHeader(admin),
       });
       expect(res.statusCode).toBe(200);
       expect(res.json().data.length).toBeGreaterThanOrEqual(1);
@@ -825,6 +826,7 @@ describe('Search', () => {
       const res = await app.inject({
         method: 'GET',
         url: '/api/v1/search?q=auth%20migration',
+        headers: authHeader(admin),
       });
       expect(res.statusCode).toBe(200);
       expect(res.json().data.length).toBeGreaterThanOrEqual(1);
@@ -834,6 +836,7 @@ describe('Search', () => {
       const res = await app.inject({
         method: 'GET',
         url: '/api/v1/search?q=zzzzzznonexistent',
+        headers: authHeader(admin),
       });
       expect(res.statusCode).toBe(200);
       expect(res.json().data.length).toBe(0);
@@ -1095,11 +1098,11 @@ describe('Tenants', () => {
         method: 'PATCH',
         url: `/api/v1/tenants/${tenantId}`,
         headers: authHeader(admin),
-        payload: { plan: 'enterprise', maxUsers: '100' },
+        payload: { plan: 'enterprise', maxUsers: 100 },
       });
       expect(res.statusCode).toBe(200);
       expect(res.json().data.plan).toBe('enterprise');
-      expect(res.json().data.maxUsers).toBe('100');
+      expect(res.json().data.maxUsers).toBe(100);
     });
   });
 
@@ -1208,10 +1211,19 @@ describe('Notifications', () => {
       const res = await app.inject({
         method: 'GET',
         url: `/api/v1/projects/${notifSlug}/notifications`,
-        headers: authHeader(member),
+        headers: authHeader(admin),
       });
       expect(res.statusCode).toBe(200);
       expect(res.json().data.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('returns 403 for non-admin on list', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/v1/projects/${notifSlug}/notifications`,
+        headers: authHeader(member),
+      });
+      expect(res.statusCode).toBe(403);
     });
   });
 

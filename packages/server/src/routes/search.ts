@@ -6,9 +6,12 @@ import { tasks } from '@pith/db/schema';
 import { or, ilike, count } from 'drizzle-orm';
 import { paginationSchema } from '@pith/core';
 import { paginated } from '../lib/response';
+import { authenticate } from '../middleware/authenticate';
 
 export const searchRoutes: FastifyPluginAsync = async (fastify) => {
   const app = fastify.withTypeProvider<ZodTypeProvider>();
+
+  app.addHook('preHandler', authenticate);
 
   // GET /api/v1/search
   app.get('/search', {

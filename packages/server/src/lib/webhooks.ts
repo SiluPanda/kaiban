@@ -58,7 +58,7 @@ async function deliverWebhook(
     statusCode,
     responseBody: responseBody?.slice(0, 2000),
     success,
-    attempts: String(attempt),
+    attempts: attempt,
   });
 
   // Retry on failure

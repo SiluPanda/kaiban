@@ -151,9 +151,11 @@ export const githubWebhookRoutes: FastifyPluginAsync = async (fastify) => {
         reply.status(401);
         return error('UNAUTHORIZED', 'Missing signature');
       }
-      const body = JSON.stringify(request.body);
-      const expected = 'sha256=' + crypto.createHmac('sha256', secret).update(body).digest('hex');
-      if (sig !== expected) {
+      const rawBody = (request as any).rawBody ?? JSON.stringify(request.body);
+      const expected = 'sha256=' + crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+      const sigBuf = Buffer.from(sig);
+      const expectedBuf = Buffer.from(expected);
+      if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
         reply.status(401);
         return error('UNAUTHORIZED', 'Invalid signature');
       }

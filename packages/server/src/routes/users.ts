@@ -16,6 +16,17 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
   // All user management routes require authentication
   app.addHook('preHandler', authenticate);
 
+  // GET /api/v1/users/me — Get current authenticated user
+  // Must be registered BEFORE /users/:id to avoid being shadowed by the parametric route
+  app.get('/users/me', {
+    schema: {
+      tags: ['Users'],
+      summary: 'Get the currently authenticated user',
+    },
+  }, async (request) => {
+    return success(request.user);
+  });
+
   // GET /api/v1/users — List users (admin only)
   app.get('/users', {
     schema: {
@@ -65,7 +76,7 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     // Generate API key
-    const { raw: apiKey, hash: apiKeyHash } = generateApiKey();
+    const { raw: apiKey, hash: apiKeyHash } = await generateApiKey();
 
     const [user] = await db.insert(users).values({
       name: body.name,
@@ -170,20 +181,11 @@ export const userRoutes: FastifyPluginAsync = async (fastify) => {
       return error('NOT_FOUND', 'User not found');
     }
 
-    const { raw: apiKey, hash: apiKeyHash } = generateApiKey();
+    const { raw: apiKey, hash: apiKeyHash } = await generateApiKey();
 
     await db.update(users).set({ apiKeyHash }).where(eq(users.id, id));
 
     return success({ apiKey });
   });
 
-  // GET /api/v1/users/me — Get current authenticated user
-  app.get('/users/me', {
-    schema: {
-      tags: ['Users'],
-      summary: 'Get the currently authenticated user',
-    },
-  }, async (request) => {
-    return success(request.user);
-  });
 };

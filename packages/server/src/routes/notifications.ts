@@ -59,6 +59,7 @@ export const notificationRoutes: FastifyPluginAsync = async (fastify) => {
       tags: ['Notifications'],
       summary: 'List notification channels for a project',
     },
+    preHandler: authorize('admin'),
   }, async (request, reply) => {
     const { slug } = request.params;
     const { limit, offset } = request.query;
@@ -75,7 +76,13 @@ export const notificationRoutes: FastifyPluginAsync = async (fastify) => {
       db.select({ total: count() }).from(notificationChannels).where(where),
     ]);
 
-    return paginated(items, total, limit, offset);
+    // Mask webhook URLs — they are secrets (can post to Slack/Discord channels)
+    const masked = items.map(({ webhookUrl, ...rest }) => ({
+      ...rest,
+      webhookUrl: webhookUrl.slice(0, 20) + '••••••',
+    }));
+
+    return paginated(masked, total, limit, offset);
   });
 
   // DELETE /api/v1/notifications/:id — Delete notification channel
