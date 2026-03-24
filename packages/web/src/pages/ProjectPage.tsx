@@ -12,6 +12,7 @@ export function ProjectPage() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [project, setProject] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [view, setView] = useState<ViewMode>('board');
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
@@ -23,13 +24,14 @@ export function ProjectPage() {
     if (statusFilter) params.status = statusFilter;
     if (priorityFilter) params.priority = priorityFilter;
 
+    setError('');
     Promise.all([
       api.getProject(slug),
       api.listTasks(slug, params),
     ]).then(([proj, tasksRes]) => {
       setProject(proj.data);
       setTasks(tasksRes.data || []);
-    }).catch(() => {})
+    }).catch(err => setError(err.message || 'Failed to load project'))
       .finally(() => setLoading(false));
   }, [slug, statusFilter, priorityFilter]);
 
@@ -62,6 +64,7 @@ export function ProjectPage() {
           </div>
         </div>
         {loading && <div className="loading">Loading tasks...</div>}
+        {error && <div className="error" style={{ color: 'var(--red)', marginBottom: '1rem' }}>{error}</div>}
         {!loading && view === 'board' && <BoardView tasks={tasks} />}
         {!loading && view === 'list' && <ListView tasks={tasks} />}
       </div>

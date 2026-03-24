@@ -30,7 +30,7 @@ sessionCommand
       printSuccess(`Session started: ${session.id}`);
       console.log(`  Agent:   ${session.agentName}`);
       console.log(`  Started: ${new Date(session.startedAt).toLocaleString()}`);
-      if (session.tasksTouched.length > 0) {
+      if (session.tasksTouched?.length > 0) {
         console.log(`  Tasks:   ${session.tasksTouched.join(', ')}`);
       }
     } catch (err) {
@@ -57,7 +57,7 @@ sessionCommand
       if (options.summary) body.summary = options.summary;
       if (options.tasks) body.tasksTouched = options.tasks.split(',').map((t: string) => t.trim());
 
-      const result = await api<any>(`/api/v1/sessions/${id}`, { method: 'PATCH', body });
+      const result = await api<any>(`/api/v1/sessions/${encodeURIComponent(id)}`, { method: 'PATCH', body });
 
       if (format === 'json') {
         printJson(result);
@@ -101,7 +101,7 @@ sessionCommand
           truncate(s.agentName, 20),
           new Date(s.startedAt).toLocaleString(),
           s.endedAt ? new Date(s.endedAt).toLocaleString() : 'active',
-          String(s.tasksTouched.length),
+          String(s.tasksTouched?.length ?? 0),
           truncate(s.summary || '—', 30),
         ]),
       );
@@ -123,7 +123,7 @@ sessionCommand
   .action(async (id, options) => {
     try {
       const format = getOutputFormat(options);
-      const result = await api<any>(`/api/v1/sessions/${id}`);
+      const result = await api<any>(`/api/v1/sessions/${encodeURIComponent(id)}`);
 
       if (format === 'json') {
         printJson(result);
@@ -136,7 +136,7 @@ sessionCommand
       console.log(`User:     ${s.user?.name || s.userId}`);
       console.log(`Started:  ${new Date(s.startedAt).toLocaleString()}`);
       console.log(`Ended:    ${s.endedAt ? new Date(s.endedAt).toLocaleString() : 'active'}`);
-      console.log(`Tasks:    ${s.tasksTouched.length > 0 ? s.tasksTouched.join(', ') : '—'}`);
+      console.log(`Tasks:    ${s.tasksTouched?.length > 0 ? s.tasksTouched.join(', ') : '—'}`);
       if (s.summary) console.log(`Summary:  ${s.summary}`);
     } catch (err) {
       if (err instanceof ApiError) {

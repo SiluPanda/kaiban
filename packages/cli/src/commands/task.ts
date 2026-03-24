@@ -43,7 +43,7 @@ taskCommand
       if (options.label) params.label = options.label;
       if (options.query) params.q = options.query;
 
-      const result = await api<any>(`/api/v1/projects/${project}/tasks`, { params });
+      const result = await api<any>(`/api/v1/projects/${encodeURIComponent(project)}/tasks`, { params });
 
       if (format === 'json') {
         printJson(result);
@@ -66,7 +66,7 @@ taskCommand
           formatStatus(t.status),
           formatPriority(t.priority),
           t.assigneeId ? t.assigneeId.slice(0, 8) : '—',
-          t.labels.length > 0 ? t.labels.join(', ') : '—',
+          t.labels?.length > 0 ? t.labels.join(', ') : '—',
         ]),
       );
 
@@ -111,7 +111,7 @@ taskCommand
       if (options.labels) body.labels = options.labels.split(',').map((l: string) => l.trim());
       if (options.parent) body.parentTaskId = options.parent;
 
-      const result = await api<any>(`/api/v1/projects/${project}/tasks`, {
+      const result = await api<any>(`/api/v1/projects/${encodeURIComponent(project)}/tasks`, {
         method: 'POST',
         body,
       });
@@ -145,7 +145,7 @@ taskCommand
   .action(async (id, options) => {
     try {
       const format = getOutputFormat(options);
-      const result = await api<any>(`/api/v1/tasks/${id}`);
+      const result = await api<any>(`/api/v1/tasks/${encodeURIComponent(id)}`);
 
       if (format === 'json') {
         printJson(result);
@@ -159,7 +159,7 @@ taskCommand
       console.log(`Priority:    ${formatPriority(task.priority)}`);
       console.log(`Project:     ${task.project?.name || task.projectId}`);
       console.log(`Assignee:    ${task.assignee?.name || task.assigneeId || '—'}`);
-      console.log(`Labels:      ${task.labels.length > 0 ? task.labels.join(', ') : '—'}`);
+      console.log(`Labels:      ${task.labels?.length > 0 ? task.labels.join(', ') : '—'}`);
       console.log(`Created:     ${new Date(task.createdAt).toLocaleString()}`);
       console.log(`Updated:     ${new Date(task.updatedAt).toLocaleString()}`);
 
@@ -226,7 +226,7 @@ taskCommand
         process.exit(2);
       }
 
-      const result = await api<any>(`/api/v1/tasks/${id}`, {
+      const result = await api<any>(`/api/v1/tasks/${encodeURIComponent(id)}`, {
         method: 'PATCH',
         body,
       });
@@ -301,7 +301,7 @@ taskCommand
   .action(async (id, options) => {
     try {
       const format = getOutputFormat(options);
-      const result = await api<any>(`/api/v1/ai/context/${id}`, { method: 'POST' });
+      const result = await api<any>(`/api/v1/ai/context/${encodeURIComponent(id)}`, { method: 'POST' });
 
       if (format === 'json') {
         printJson(result);
@@ -337,7 +337,7 @@ taskCommand
   .action(async (id, text, options) => {
     try {
       const format = getOutputFormat(options);
-      const result = await api<any>(`/api/v1/tasks/${id}/comments`, {
+      const result = await api<any>(`/api/v1/tasks/${encodeURIComponent(id)}/comments`, {
         method: 'POST',
         body: { body: text },
       });
