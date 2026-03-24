@@ -1001,6 +1001,132 @@ describe('Sessions', () => {
   });
 });
 
+// ─── Views ───────────────────────────────────────────────────────────────────
+
+describe('Views', () => {
+  let viewSlug: string;
+
+  beforeAll(async () => {
+    viewSlug = unique('view-proj');
+    await createProject(viewSlug);
+  });
+
+  describe('POST /api/v1/projects/:slug/views', () => {
+    it('creates a saved view', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/v1/projects/${viewSlug}/views`,
+        headers: authHeader(member),
+        payload: {
+          name: 'My Backlog',
+          filters: { status: 'backlog', priority: 'P0' },
+          sort: { field: 'createdAt', order: 'desc' },
+        },
+      });
+      expect(res.statusCode).toBe(201);
+      const view = res.json().data;
+      expect(view.name).toBe('My Backlog');
+      expect(view.filters).toEqual({ status: 'backlog', priority: 'P0' });
+      expect(view.createdBy).toBe(member.id);
+    });
+
+    it('returns 404 for non-existent project', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/projects/nonexistent/views',
+        headers: authHeader(member),
+        payload: { name: 'Test' },
+      });
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
+  describe('GET /api/v1/projects/:slug/views', () => {
+    it('lists views for a project', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/v1/projects/${viewSlug}/views`,
+        headers: authHeader(member),
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  describe('GET /api/v1/views/:id', () => {
+    it('returns a view with project and creator', async () => {
+      const createRes = await app.inject({
+        method: 'POST',
+        url: `/api/v1/projects/${viewSlug}/views`,
+        headers: authHeader(admin),
+        payload: { name: 'Admin View' },
+      });
+      const viewId = createRes.json().data.id;
+
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/v1/views/${viewId}`,
+        headers: authHeader(member),
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.name).toBe('Admin View');
+      expect(res.json().data.project).toBeDefined();
+      expect(res.json().data.creator).toBeDefined();
+    });
+
+    it('returns 404 for non-existent view', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/v1/views/00000000-0000-0000-0000-000000000000',
+        headers: authHeader(member),
+      });
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
+  describe('PATCH /api/v1/views/:id', () => {
+    it('updates a view', async () => {
+      const createRes = await app.inject({
+        method: 'POST',
+        url: `/api/v1/projects/${viewSlug}/views`,
+        headers: authHeader(member),
+        payload: { name: 'Update Me', filters: { status: 'todo' } },
+      });
+      const viewId = createRes.json().data.id;
+
+      const res = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/views/${viewId}`,
+        headers: authHeader(member),
+        payload: { name: 'Updated View', filters: { status: 'done' } },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.name).toBe('Updated View');
+      expect(res.json().data.filters).toEqual({ status: 'done' });
+    });
+  });
+
+  describe('DELETE /api/v1/views/:id', () => {
+    it('deletes a view', async () => {
+      const createRes = await app.inject({
+        method: 'POST',
+        url: `/api/v1/projects/${viewSlug}/views`,
+        headers: authHeader(member),
+        payload: { name: 'Delete Me' },
+      });
+      const viewId = createRes.json().data.id;
+
+      const res = await app.inject({
+        method: 'DELETE',
+        url: `/api/v1/views/${viewId}`,
+        headers: authHeader(member),
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.deleted).toBe(true);
+    });
+  });
+});
+
 // ─── Duplicates ──────────────────────────────────────────────────────────────
 
 describe('Duplicates', () => {
