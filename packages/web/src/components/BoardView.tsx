@@ -31,7 +31,7 @@ export function BoardView({ tasks }: { tasks: any[] }) {
                 <h3>{task.title}</h3>
                 <div className="meta">
                   <PriorityBadge priority={task.priority} />
-                  {task.labels.length > 0 && <span>{task.labels.join(', ')}</span>}
+                  {task.labels?.length > 0 && <span>{task.labels.join(', ')}</span>}
                 </div>
               </div>
             </Link>

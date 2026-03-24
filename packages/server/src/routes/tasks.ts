@@ -269,22 +269,35 @@ export const taskRoutes: FastifyPluginAsync = async (fastify) => {
       return error('NESTING_LIMIT', 'Cannot create sub-tasks under a sub-task');
     }
 
-    const created = await db.insert(tasks).values(
-      subtasks.map((st) => ({
-        projectId: parent.projectId,
-        title: st.title,
-        description: st.description ?? null,
-        status: 'backlog' as const,
-        priority: st.priority ?? 'P2',
-        assigneeId: st.assigneeId ?? null,
-        assigneeType: st.assigneeType ?? null,
-        parentTaskId: id,
-        labels: st.labels ?? [],
-        metadata: {},
-        createdBy: request.user.id,
-        createdByType: request.user.role === 'agent' ? 'agent' as const : 'human' as const,
-      }))
-    ).returning();
+    const created = await db.transaction(async (tx) => {
+      const inserted = await tx.insert(tasks).values(
+        subtasks.map((st) => ({
+          projectId: parent.projectId,
+          title: st.title,
+          description: st.description ?? null,
+          status: 'backlog' as const,
+          priority: st.priority ?? 'P2',
+          assigneeId: st.assigneeId ?? null,
+          assigneeType: st.assigneeType ?? null,
+          parentTaskId: id,
+          labels: st.labels ?? [],
+          metadata: {},
+          createdBy: request.user.id,
+          createdByType: request.user.role === 'agent' ? 'agent' as const : 'human' as const,
+        }))
+      ).returning();
+
+      await tx.insert(activities).values(
+        inserted.map((t) => ({
+          taskId: t.id,
+          actorId: request.user.id,
+          actorType: request.user.role === 'agent' ? 'agent' as const : 'human' as const,
+          action: 'created',
+        }))
+      );
+
+      return inserted;
+    });
 
     reply.status(201);
     return success(created);

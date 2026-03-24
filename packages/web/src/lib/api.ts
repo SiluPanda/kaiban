@@ -27,6 +27,8 @@ export const api = {
   createTask: (slug: string, body: Record<string, unknown>) => request('POST', `/api/v1/projects/${slug}/tasks`, body),
   addComment: (taskId: string, body: string) => request('POST', `/api/v1/tasks/${taskId}/comments`, { body }),
   getAnalytics: (slug: string) => request('GET', `/api/v1/projects/${slug}/analytics`),
+  listSessions: (limit = 50) => request('GET', `/api/v1/sessions?limit=${limit}`),
+  getSession: (id: string) => request('GET', `/api/v1/sessions/${id}`),
 };
 
 export function setApiKey(key: string) {

@@ -172,16 +172,20 @@ export const githubWebhookRoutes: FastifyPluginAsync = async (fastify) => {
       const pr = payload.pull_request;
       const externalId = `${payload.repository.full_name}#${pr.number}`;
 
-      // Find matching links and update status
+      // Find matching links and update status atomically
       const links = await db.select().from(taskLinks).where(eq(taskLinks.externalId, externalId));
       const prStatus = pr.merged ? 'merged' : pr.state; // 'open', 'closed', 'merged'
 
-      for (const link of links) {
-        await db.update(taskLinks).set({
-          status: prStatus,
-          title: pr.title,
-          updatedAt: new Date(),
-        }).where(eq(taskLinks.id, link.id));
+      if (links.length > 0) {
+        await db.transaction(async (tx) => {
+          for (const link of links) {
+            await tx.update(taskLinks).set({
+              status: prStatus,
+              title: pr.title,
+              updatedAt: new Date(),
+            }).where(eq(taskLinks.id, link.id));
+          }
+        });
       }
     }
 

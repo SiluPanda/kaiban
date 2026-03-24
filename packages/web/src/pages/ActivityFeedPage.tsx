@@ -1,27 +1,24 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Nav } from '../components/Nav';
+import { api } from '../lib/api';
 
 export function ActivityFeedPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const apiKey = localStorage.getItem('pith_api_key') || '';
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch('/api/v1/sessions?limit=50', { headers })
-      .then(r => r.json())
+    api.listSessions()
       .then(r => setSessions(r.data || []))
-      .catch(() => {})
+      .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
 
   const agentFilter = searchParams.get('agent') || '';
   const filtered = agentFilter
-    ? sessions.filter(s => s.agentName.toLowerCase().includes(agentFilter.toLowerCase()))
+    ? sessions.filter(s => (s.agentName || '').toLowerCase().includes(agentFilter.toLowerCase()))
     : sessions;
 
   return (
@@ -45,8 +42,9 @@ export function ActivityFeedPage() {
         </div>
 
         {loading && <div className="loading">Loading sessions...</div>}
+        {error && <div className="error" style={{ color: 'var(--red)', marginBottom: '1rem' }}>{error}</div>}
 
-        {!loading && filtered.length === 0 && (
+        {!loading && !error && filtered.length === 0 && (
           <div className="loading">No agent sessions found.</div>
         )}
 

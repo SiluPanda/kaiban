@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Nav } from '../components/Nav';
+import { api } from '../lib/api';
 
 export function SessionReviewPage() {
   const { id } = useParams<{ id: string }>();
@@ -8,26 +9,17 @@ export function SessionReviewPage() {
   const [taskDetails, setTaskDetails] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const apiKey = localStorage.getItem('pith_api_key') || '';
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
-
   useEffect(() => {
     if (!id) return;
-    fetch(`/api/v1/sessions/${id}`, { headers })
-      .then(r => r.json())
+    api.getSession(id)
       .then(async (r) => {
         const s = r.data;
         setSession(s);
 
-        // Load details for touched tasks
         if (s.tasksTouched?.length > 0) {
           const details = await Promise.all(
             s.tasksTouched.slice(0, 20).map((taskId: string) =>
-              fetch(`/api/v1/tasks/${taskId}`, { headers })
-                .then(r => r.json())
-                .then(r => r.data)
-                .catch(() => null)
+              api.getTask(taskId).then(r => r.data).catch(() => null)
             )
           );
           setTaskDetails(details.filter(Boolean));

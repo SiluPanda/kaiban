@@ -13,6 +13,7 @@ export function TaskDetailPage() {
   const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [commentError, setCommentError] = useState('');
 
   const loadTask = () => {
     if (!id) return;
@@ -27,11 +28,14 @@ export function TaskDetailPage() {
   const handleComment = async () => {
     if (!id || !commentText.trim()) return;
     setSubmitting(true);
+    setCommentError('');
     try {
       await api.addComment(id, commentText);
       setCommentText('');
       loadTask();
-    } catch {}
+    } catch {
+      setCommentError('Failed to post comment');
+    }
     setSubmitting(false);
   };
 
@@ -67,7 +71,7 @@ export function TaskDetailPage() {
             </div>
             <div className="field">
               <div className="field-label">Labels</div>
-              <div>{task.labels.length > 0 ? task.labels.join(', ') : '—'}</div>
+              <div>{task.labels?.length > 0 ? task.labels.join(', ') : '—'}</div>
             </div>
           </div>
 
@@ -112,6 +116,7 @@ export function TaskDetailPage() {
                 Comment
               </button>
             </div>
+            {commentError && <div style={{ color: 'var(--red)', fontSize: '0.8rem', marginTop: '0.25rem' }}>{commentError}</div>}
           </div>
 
           {task.activities && task.activities.length > 0 && (
