@@ -5,6 +5,7 @@ import fastifySwaggerUi from '@fastify/swagger-ui';
 import {
   serializerCompiler,
   validatorCompiler,
+  jsonSchemaTransform,
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
 import { db } from '@kaiban/db';
@@ -38,11 +39,7 @@ export async function buildApp() {
       },
       servers: [{ url: 'http://localhost:3456' }],
     },
-    transform: ({ schema, url }) => {
-      // Remove response schemas from swagger to avoid serialization issues with Zod
-      const { response, ...rest } = schema || {};
-      return { schema: rest, url };
-    },
+    transform: jsonSchemaTransform,
   });
 
   await app.register(fastifySwaggerUi, {
