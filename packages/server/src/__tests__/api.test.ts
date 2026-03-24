@@ -1001,6 +1001,70 @@ describe('Sessions', () => {
   });
 });
 
+// ─── Plugins ─────────────────────────────────────────────────────────────────
+
+describe('Plugins', () => {
+  describe('GET /api/v1/plugins', () => {
+    it('lists loaded plugins', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/v1/plugins',
+        headers: authHeader(admin),
+      });
+      expect(res.statusCode).toBe(200);
+      const data = res.json().data;
+      expect(data.count).toBeGreaterThanOrEqual(1);
+      expect(data.plugins.some((p: any) => p.name === 'example-logger')).toBe(true);
+    });
+  });
+
+  describe('GET /api/v1/plugins/:name', () => {
+    it('returns plugin details', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/v1/plugins/example-logger',
+        headers: authHeader(admin),
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.name).toBe('example-logger');
+      expect(res.json().data.version).toBe('1.0.0');
+      expect(res.json().data.hooks).toContain('task.created');
+    });
+
+    it('returns 404 for non-existent plugin', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/v1/plugins/nonexistent',
+        headers: authHeader(admin),
+      });
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
+  describe('POST /api/v1/plugins/emit', () => {
+    it('emits a hook event (admin only)', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/plugins/emit',
+        headers: authHeader(admin),
+        payload: { event: 'task.created', data: { title: 'Test event' } },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.emitted).toBe('task.created');
+    });
+
+    it('returns 403 for non-admin', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/plugins/emit',
+        headers: authHeader(member),
+        payload: { event: 'task.created' },
+      });
+      expect(res.statusCode).toBe(403);
+    });
+  });
+});
+
 // ─── Time Tracking ───────────────────────────────────────────────────────────
 
 describe('Time Tracking', () => {

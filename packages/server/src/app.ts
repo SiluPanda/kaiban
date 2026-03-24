@@ -25,6 +25,9 @@ import { analyticsRoutes } from './routes/analytics';
 import { duplicateRoutes } from './routes/duplicates';
 import { viewRoutes } from './routes/views';
 import { timeTrackingRoutes } from './routes/time-tracking';
+import { pluginRoutes } from './routes/plugins';
+import { pluginRegistry } from './plugins/registry';
+import { examplePlugin } from './plugins/example-plugin';
 
 export async function buildApp() {
   const app = Fastify({
@@ -81,6 +84,11 @@ export async function buildApp() {
   await app.register(duplicateRoutes, { prefix: '/api/v1' });
   await app.register(viewRoutes, { prefix: '/api/v1' });
   await app.register(timeTrackingRoutes, { prefix: '/api/v1' });
+  await app.register(pluginRoutes, { prefix: '/api/v1' });
+
+  // Load plugins
+  pluginRegistry.register(examplePlugin);
+  await pluginRegistry.loadAll();
 
   return app;
 }
