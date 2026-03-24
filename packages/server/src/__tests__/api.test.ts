@@ -1001,6 +1001,141 @@ describe('Sessions', () => {
   });
 });
 
+// ─── Notifications (Slack/Discord) ───────────────────────────────────────────
+
+describe('Notifications', () => {
+  let notifSlug: string;
+
+  beforeAll(async () => {
+    notifSlug = unique('notif-proj');
+    await createProject(notifSlug);
+  });
+
+  describe('POST /api/v1/projects/:slug/notifications', () => {
+    it('creates a Slack notification channel (admin only)', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/v1/projects/${notifSlug}/notifications`,
+        headers: authHeader(admin),
+        payload: {
+          provider: 'slack',
+          name: '#dev-alerts',
+          webhookUrl: 'https://hooks.slack.com/services/T00/B00/xxx',
+          events: ['task.created', 'task.status_changed'],
+        },
+      });
+      expect(res.statusCode).toBe(201);
+      const ch = res.json().data;
+      expect(ch.provider).toBe('slack');
+      expect(ch.name).toBe('#dev-alerts');
+      expect(ch.events).toEqual(['task.created', 'task.status_changed']);
+    });
+
+    it('creates a Discord notification channel', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/v1/projects/${notifSlug}/notifications`,
+        headers: authHeader(admin),
+        payload: {
+          provider: 'discord',
+          name: '#tasks',
+          webhookUrl: 'https://discord.com/api/webhooks/123/abc',
+          events: ['*'],
+        },
+      });
+      expect(res.statusCode).toBe(201);
+      expect(res.json().data.provider).toBe('discord');
+    });
+
+    it('returns 403 for non-admin', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/v1/projects/${notifSlug}/notifications`,
+        headers: authHeader(member),
+        payload: { provider: 'slack', name: 'test', webhookUrl: 'https://x.com', events: ['*'] },
+      });
+      expect(res.statusCode).toBe(403);
+    });
+  });
+
+  describe('GET /api/v1/projects/:slug/notifications', () => {
+    it('lists notification channels', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/v1/projects/${notifSlug}/notifications`,
+        headers: authHeader(member),
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  describe('PATCH /api/v1/notifications/:id', () => {
+    it('toggles channel active status', async () => {
+      const createRes = await app.inject({
+        method: 'POST',
+        url: `/api/v1/projects/${notifSlug}/notifications`,
+        headers: authHeader(admin),
+        payload: { provider: 'slack', name: 'toggle-test', webhookUrl: 'https://x.com/hook', events: ['*'] },
+      });
+      const chId = createRes.json().data.id;
+
+      const res = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/notifications/${chId}`,
+        headers: authHeader(admin),
+        payload: { active: false },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.active).toBe(false);
+    });
+  });
+
+  describe('DELETE /api/v1/notifications/:id', () => {
+    it('deletes a channel', async () => {
+      const createRes = await app.inject({
+        method: 'POST',
+        url: `/api/v1/projects/${notifSlug}/notifications`,
+        headers: authHeader(admin),
+        payload: { provider: 'discord', name: 'del-me', webhookUrl: 'https://x.com/hook', events: ['*'] },
+      });
+      const chId = createRes.json().data.id;
+
+      const res = await app.inject({
+        method: 'DELETE',
+        url: `/api/v1/notifications/${chId}`,
+        headers: authHeader(admin),
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.deleted).toBe(true);
+    });
+  });
+
+  describe('POST /api/v1/notifications/preview', () => {
+    it('previews a Slack notification message', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/notifications/preview',
+        headers: authHeader(admin),
+        payload: { provider: 'slack', event: 'task.created' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.message.text).toContain('created');
+    });
+
+    it('previews a Discord notification message', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/v1/notifications/preview',
+        headers: authHeader(admin),
+        payload: { provider: 'discord', event: 'task.status_changed' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data.message.embeds).toBeDefined();
+    });
+  });
+});
+
 // ─── Plugins ─────────────────────────────────────────────────────────────────
 
 describe('Plugins', () => {

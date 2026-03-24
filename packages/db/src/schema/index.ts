@@ -9,3 +9,4 @@ export { views, viewsRelations } from './views';
 export { webhooks, webhooksRelations, webhookDeliveries, webhookDeliveriesRelations } from './webhooks';
 export { taskLinks, taskLinksRelations } from './task-links';
 export { timeEntries, timeEntriesRelations } from './time-entries';
+export { notificationChannels, notificationChannelsRelations } from './notification-channels';
