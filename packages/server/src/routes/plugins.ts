@@ -50,7 +50,11 @@ export const pluginRoutes: FastifyPluginAsync = async (fastify) => {
   app.post('/plugins/emit', {
     schema: {
       body: z.object({
-        event: z.string().min(1),
+        event: z.enum([
+          'task.created', 'task.updated', 'task.deleted',
+          'comment.created', 'project.created',
+          'session.started', 'session.ended', 'server.started',
+        ]),
         data: z.record(z.unknown()).optional(),
       }),
       tags: ['Plugins'],
@@ -59,7 +63,7 @@ export const pluginRoutes: FastifyPluginAsync = async (fastify) => {
     preHandler: authorize('admin'),
   }, async (request) => {
     const { event, data } = request.body;
-    await pluginRegistry.emit(event as any, data ?? {});
+    await pluginRegistry.emit(event, data ?? {});
     return success({ emitted: event });
   });
 };

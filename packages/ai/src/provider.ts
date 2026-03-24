@@ -61,7 +61,8 @@ export async function getModel(): Promise<LanguageModelV1 | null> {
       default:
         return null;
     }
-  } catch {
+  } catch (err) {
+    console.error('Failed to initialize AI provider:', err instanceof Error ? err.message : err);
     return null;
   }
 }

@@ -16,13 +16,13 @@ export const createProjectSchema = z.object({
   slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/),
   name: z.string().min(1).max(255),
   description: z.string().optional(),
-  defaultStatusFlow: z.array(z.string()).optional(),
+  defaultStatusFlow: z.array(statusSchema).min(1).optional(),
   settings: z.record(z.unknown()).optional(),
 });
 
 export const updateProjectSchema = z.object({
   name: z.string().min(1).max(255).optional(),
   description: z.string().nullable().optional(),
-  defaultStatusFlow: z.array(z.string()).optional(),
+  defaultStatusFlow: z.array(statusSchema).min(1).optional(),
   settings: z.record(z.unknown()).optional(),
 });

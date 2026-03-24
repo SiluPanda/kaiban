@@ -12,5 +12,5 @@ export const commentSchema = z.object({
 });
 
 export const createCommentSchema = z.object({
-  body: z.string().min(1),
+  body: z.string().min(1).max(50000),
 });
