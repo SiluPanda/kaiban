@@ -6,9 +6,13 @@ import { comments, tasks, activities } from '@kaiban/db/schema';
 import { eq, count, asc } from 'drizzle-orm';
 import { createCommentSchema, paginationSchema, uuidSchema } from '@kaiban/core';
 import { success, paginated, error } from '../lib/response';
+import { authenticate } from '../middleware/authenticate';
 
 export const commentRoutes: FastifyPluginAsync = async (fastify) => {
   const app = fastify.withTypeProvider<ZodTypeProvider>();
+
+  // Require authentication for all comment routes
+  app.addHook('preHandler', authenticate);
 
   // POST /api/v1/tasks/:id/comments — Add comment
   app.post('/tasks/:id/comments', {
@@ -32,15 +36,15 @@ export const commentRoutes: FastifyPluginAsync = async (fastify) => {
     const [comment] = await db.insert(comments).values({
       taskId: id,
       body: commentBody,
-      authorId: '00000000-0000-0000-0000-000000000000', // placeholder until auth
-      authorType: 'human',
+      authorId: request.user.id,
+      authorType: request.user.role === 'agent' ? 'agent' as const : 'human' as const,
     }).returning();
 
     // Log activity
     await db.insert(activities).values({
       taskId: id,
-      actorId: '00000000-0000-0000-0000-000000000000',
-      actorType: 'human',
+      actorId: request.user.id,
+      actorType: request.user.role === 'agent' ? 'agent' as const : 'human' as const,
       action: 'commented',
     });
 

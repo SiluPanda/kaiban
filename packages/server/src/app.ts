@@ -14,6 +14,8 @@ import { taskRoutes } from './routes/tasks';
 import { commentRoutes } from './routes/comments';
 import { activityRoutes } from './routes/activity';
 import { searchRoutes } from './routes/search';
+import { userRoutes } from './routes/users';
+import { authRoutes } from './routes/auth';
 
 export async function buildApp() {
   const app = Fastify({
@@ -63,6 +65,8 @@ export async function buildApp() {
   await app.register(commentRoutes, { prefix: '/api/v1' });
   await app.register(activityRoutes, { prefix: '/api/v1' });
   await app.register(searchRoutes, { prefix: '/api/v1' });
+  await app.register(userRoutes, { prefix: '/api/v1' });
+  await app.register(authRoutes, { prefix: '/api/v1' });
 
   return app;
 }

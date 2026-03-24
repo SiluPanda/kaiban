@@ -6,9 +6,13 @@ import { tasks, projects, activities, comments } from '@kaiban/db/schema';
 import { eq, and, count, desc, inArray, ilike, or, sql, asc } from 'drizzle-orm';
 import { createTaskSchema, updateTaskSchema, paginationSchema, statusSchema, prioritySchema, uuidSchema } from '@kaiban/core';
 import { success, paginated, error } from '../lib/response';
+import { authenticate } from '../middleware/authenticate';
 
 export const taskRoutes: FastifyPluginAsync = async (fastify) => {
   const app = fastify.withTypeProvider<ZodTypeProvider>();
+
+  // Require authentication for all task routes
+  app.addHook('preHandler', authenticate);
 
   // GET /api/v1/projects/:slug/tasks — List tasks with filters
   app.get('/projects/:slug/tasks', {
@@ -95,8 +99,6 @@ export const taskRoutes: FastifyPluginAsync = async (fastify) => {
       }
     }
 
-    // TODO: In Phase 1 Task 03 (auth), createdBy will come from auth context
-    // For now, use a placeholder UUID
     const [task] = await db.insert(tasks).values({
       projectId: project.id,
       title: body.title,
@@ -110,15 +112,15 @@ export const taskRoutes: FastifyPluginAsync = async (fastify) => {
       estimate: body.estimate ?? null,
       dueDate: body.dueDate ?? null,
       metadata: body.metadata ?? {},
-      createdBy: '00000000-0000-0000-0000-000000000000', // placeholder until auth
-      createdByType: 'human',
+      createdBy: request.user.id,
+      createdByType: request.user.role === 'agent' ? 'agent' as const : 'human' as const,
     }).returning();
 
     // Log creation activity
     await db.insert(activities).values({
       taskId: task.id,
-      actorId: '00000000-0000-0000-0000-000000000000', // placeholder until auth
-      actorType: 'human',
+      actorId: request.user.id,
+      actorType: request.user.role === 'agent' ? 'agent' as const : 'human' as const,
       action: 'created',
     });
 
@@ -202,8 +204,8 @@ export const taskRoutes: FastifyPluginAsync = async (fastify) => {
 
         activityEntries.push({
           taskId: id,
-          actorId: '00000000-0000-0000-0000-000000000000', // placeholder until auth
-          actorType: 'human',
+          actorId: request.user.id,
+          actorType: request.user.role === 'agent' ? 'agent' : 'human',
           action,
           fieldChanged: field,
           oldValue: oldVal != null ? String(oldVal) : null,
@@ -274,8 +276,8 @@ export const taskRoutes: FastifyPluginAsync = async (fastify) => {
         parentTaskId: id,
         labels: st.labels ?? [],
         metadata: {},
-        createdBy: '00000000-0000-0000-0000-000000000000', // placeholder until auth
-        createdByType: 'human' as const,
+        createdBy: request.user.id,
+        createdByType: request.user.role === 'agent' ? 'agent' as const : 'human' as const,
       }))
     ).returning();
 

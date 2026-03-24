@@ -6,9 +6,14 @@ import { projects } from '@kaiban/db/schema';
 import { eq, count } from 'drizzle-orm';
 import { createProjectSchema, updateProjectSchema, paginationSchema } from '@kaiban/core';
 import { success, paginated, error } from '../lib/response';
+import { authenticate } from '../middleware/authenticate';
+import { authorize } from '../middleware/authorize';
 
 export const projectRoutes: FastifyPluginAsync = async (fastify) => {
   const app = fastify.withTypeProvider<ZodTypeProvider>();
+
+  // Require authentication for all project routes
+  app.addHook('preHandler', authenticate);
 
   // GET /api/v1/projects
   app.get('/projects', {
@@ -35,6 +40,7 @@ export const projectRoutes: FastifyPluginAsync = async (fastify) => {
       tags: ['Projects'],
       summary: 'Create a new project',
     },
+    preHandler: authorize('admin'),
   }, async (request, reply) => {
     const body = request.body;
 
