@@ -12,9 +12,15 @@ async function request(method: string, path: string, body?: unknown): Promise<an
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
+    signal: AbortSignal.timeout(30000),
   });
 
-  const json = await res.json();
+  let json: any;
+  try {
+    json = await res.json();
+  } catch {
+    throw new Error(`HTTP ${res.status}: non-JSON response`);
+  }
 
   if (!res.ok) {
     const msg = json?.errors?.message || `HTTP ${res.status}`;
@@ -41,23 +47,23 @@ export const api = {
     return request('GET', `/api/v1/projects/${encodeURIComponent(slug)}/tasks${qs ? `?${qs}` : ''}`);
   },
   getTask: (id: string) =>
-    request('GET', `/api/v1/tasks/${id}`),
+    request('GET', `/api/v1/tasks/${encodeURIComponent(id)}`),
   createTask: (slug: string, body: Record<string, unknown>) =>
     request('POST', `/api/v1/projects/${encodeURIComponent(slug)}/tasks`, body),
   updateTask: (id: string, body: Record<string, unknown>) =>
-    request('PATCH', `/api/v1/tasks/${id}`, body),
+    request('PATCH', `/api/v1/tasks/${encodeURIComponent(id)}`, body),
   createSubtasks: (parentId: string, subtasks: Array<Record<string, unknown>>) =>
-    request('POST', `/api/v1/tasks/${parentId}/subtasks`, { subtasks }),
+    request('POST', `/api/v1/tasks/${encodeURIComponent(parentId)}/subtasks`, { subtasks }),
 
   // Comments
   addComment: (taskId: string, body: string) =>
-    request('POST', `/api/v1/tasks/${taskId}/comments`, { body }),
+    request('POST', `/api/v1/tasks/${encodeURIComponent(taskId)}/comments`, { body }),
   listComments: (taskId: string, limit = 20, offset = 0) =>
-    request('GET', `/api/v1/tasks/${taskId}/comments?limit=${limit}&offset=${offset}`),
+    request('GET', `/api/v1/tasks/${encodeURIComponent(taskId)}/comments?limit=${limit}&offset=${offset}`),
 
   // Activity
   getActivity: (taskId: string, limit = 50, offset = 0) =>
-    request('GET', `/api/v1/tasks/${taskId}/activity?limit=${limit}&offset=${offset}`),
+    request('GET', `/api/v1/tasks/${encodeURIComponent(taskId)}/activity?limit=${limit}&offset=${offset}`),
 
   // Search
   search: (q: string, limit = 20, offset = 0) =>

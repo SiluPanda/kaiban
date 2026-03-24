@@ -2,6 +2,11 @@ import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mc
 import { z } from 'zod';
 import { api } from './api-client.js';
 
+function errorResult(err: unknown) {
+  const message = err instanceof Error ? err.message : 'Unknown error';
+  return { content: [{ type: 'text' as const, text: JSON.stringify({ error: message }) }], isError: true };
+}
+
 export function createServer(): McpServer {
   const server = new McpServer({
     name: 'pith',
@@ -17,16 +22,20 @@ export function createServer(): McpServer {
       offset: z.number().min(0).default(0).describe('Offset for pagination'),
     },
   }, async ({ limit, offset }) => {
-    const result = await api.listProjects(limit, offset);
-    return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }] };
+    try {
+      const result = await api.listProjects(limit, offset);
+      return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }] };
+    } catch (err) { return errorResult(err); }
   });
 
   server.registerTool('get_project', {
     description: 'Get project details including settings and status flow',
     inputSchema: { slug: z.string().describe('Project slug') },
   }, async ({ slug }) => {
-    const result = await api.getProject(slug);
-    return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }] };
+    try {
+      const result = await api.getProject(slug);
+      return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }] };
+    } catch (err) { return errorResult(err); }
   });
 
   server.registerTool('list_tasks', {
@@ -42,20 +51,24 @@ export function createServer(): McpServer {
       offset: z.number().min(0).default(0).describe('Offset'),
     },
   }, async ({ project_slug, limit, offset, ...filters }) => {
-    const params: Record<string, string> = { limit: String(limit), offset: String(offset) };
-    for (const [k, v] of Object.entries(filters)) {
-      if (v !== undefined) params[k] = String(v);
-    }
-    const result = await api.listTasks(project_slug, params);
-    return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }] };
+    try {
+      const params: Record<string, string> = { limit: String(limit), offset: String(offset) };
+      for (const [k, v] of Object.entries(filters)) {
+        if (v !== undefined) params[k] = String(v);
+      }
+      const result = await api.listTasks(project_slug, params);
+      return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }] };
+    } catch (err) { return errorResult(err); }
   });
 
   server.registerTool('get_task', {
     description: 'Get full task details including comments, sub-tasks, and activity history',
     inputSchema: { task_id: z.string().uuid().describe('Task UUID') },
   }, async ({ task_id }) => {
-    const result = await api.getTask(task_id);
-    return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }] };
+    try {
+      const result = await api.getTask(task_id);
+      return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }] };
+    } catch (err) { return errorResult(err); }
   });
 
   server.registerTool('create_task', {
@@ -74,18 +87,20 @@ export function createServer(): McpServer {
       due_date: z.string().optional().describe('Due date (ISO 8601)'),
     },
   }, async ({ project_slug, title, description, status, priority, assignee_id, assignee_type, parent_task_id, labels, estimate, due_date }) => {
-    const body: Record<string, unknown> = { title };
-    if (description !== undefined) body.description = description;
-    if (status !== undefined) body.status = status;
-    if (priority !== undefined) body.priority = priority;
-    if (assignee_id !== undefined) body.assigneeId = assignee_id;
-    if (assignee_type !== undefined) body.assigneeType = assignee_type;
-    if (parent_task_id !== undefined) body.parentTaskId = parent_task_id;
-    if (labels !== undefined) body.labels = labels;
-    if (estimate !== undefined) body.estimate = estimate;
-    if (due_date !== undefined) body.dueDate = due_date;
-    const result = await api.createTask(project_slug, body);
-    return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }] };
+    try {
+      const body: Record<string, unknown> = { title };
+      if (description !== undefined) body.description = description;
+      if (status !== undefined) body.status = status;
+      if (priority !== undefined) body.priority = priority;
+      if (assignee_id !== undefined) body.assigneeId = assignee_id;
+      if (assignee_type !== undefined) body.assigneeType = assignee_type;
+      if (parent_task_id !== undefined) body.parentTaskId = parent_task_id;
+      if (labels !== undefined) body.labels = labels;
+      if (estimate !== undefined) body.estimate = estimate;
+      if (due_date !== undefined) body.dueDate = due_date;
+      const result = await api.createTask(project_slug, body);
+      return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }] };
+    } catch (err) { return errorResult(err); }
   });
 
   server.registerTool('update_task', {
@@ -103,18 +118,20 @@ export function createServer(): McpServer {
       due_date: z.string().nullable().optional().describe('Due date'),
     },
   }, async ({ task_id, title, description, status, priority, assignee_id, assignee_type, labels, estimate, due_date }) => {
-    const body: Record<string, unknown> = {};
-    if (title !== undefined) body.title = title;
-    if (description !== undefined) body.description = description;
-    if (status !== undefined) body.status = status;
-    if (priority !== undefined) body.priority = priority;
-    if (assignee_id !== undefined) body.assigneeId = assignee_id;
-    if (assignee_type !== undefined) body.assigneeType = assignee_type;
-    if (labels !== undefined) body.labels = labels;
-    if (estimate !== undefined) body.estimate = estimate;
-    if (due_date !== undefined) body.dueDate = due_date;
-    const result = await api.updateTask(task_id, body);
-    return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }] };
+    try {
+      const body: Record<string, unknown> = {};
+      if (title !== undefined) body.title = title;
+      if (description !== undefined) body.description = description;
+      if (status !== undefined) body.status = status;
+      if (priority !== undefined) body.priority = priority;
+      if (assignee_id !== undefined) body.assigneeId = assignee_id;
+      if (assignee_type !== undefined) body.assigneeType = assignee_type;
+      if (labels !== undefined) body.labels = labels;
+      if (estimate !== undefined) body.estimate = estimate;
+      if (due_date !== undefined) body.dueDate = due_date;
+      const result = await api.updateTask(task_id, body);
+      return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }] };
+    } catch (err) { return errorResult(err); }
   });
 
   server.registerTool('add_comment', {
@@ -124,8 +141,10 @@ export function createServer(): McpServer {
       body: z.string().min(1).describe('Comment body (Markdown)'),
     },
   }, async ({ task_id, body }) => {
-    const result = await api.addComment(task_id, body);
-    return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }] };
+    try {
+      const result = await api.addComment(task_id, body);
+      return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }] };
+    } catch (err) { return errorResult(err); }
   });
 
   server.registerTool('create_subtasks', {
@@ -143,13 +162,15 @@ export function createServer(): McpServer {
       })).min(1).max(20).describe('Subtasks to create'),
     },
   }, async ({ parent_task_id, subtasks }) => {
-    const mapped = subtasks.map(st => ({
-      title: st.title, description: st.description, priority: st.priority,
-      assigneeId: st.assignee_id, assigneeType: st.assignee_type,
-      labels: st.labels, estimate: st.estimate,
-    }));
-    const result = await api.createSubtasks(parent_task_id, mapped);
-    return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }] };
+    try {
+      const mapped = subtasks.map(st => ({
+        title: st.title, description: st.description, priority: st.priority,
+        assigneeId: st.assignee_id, assigneeType: st.assignee_type,
+        labels: st.labels, estimate: st.estimate,
+      }));
+      const result = await api.createSubtasks(parent_task_id, mapped);
+      return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }] };
+    } catch (err) { return errorResult(err); }
   });
 
   server.registerTool('search_tasks', {
@@ -160,8 +181,10 @@ export function createServer(): McpServer {
       offset: z.number().min(0).default(0).describe('Offset'),
     },
   }, async ({ query, limit, offset }) => {
-    const result = await api.search(query, limit, offset);
-    return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }] };
+    try {
+      const result = await api.search(query, limit, offset);
+      return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }] };
+    } catch (err) { return errorResult(err); }
   });
 
   server.registerTool('get_my_tasks', {
@@ -172,11 +195,13 @@ export function createServer(): McpServer {
       limit: z.number().min(1).max(100).default(50).describe('Max results'),
     },
   }, async ({ project_slug, status, limit }) => {
-    const me = await api.getMe();
-    const params: Record<string, string> = { assignee_id: me.data.id, limit: String(limit) };
-    if (status) params.status = status;
-    const result = await api.listTasks(project_slug, params);
-    return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }] };
+    try {
+      const me = await api.getMe();
+      const params: Record<string, string> = { assignee_id: me.data.id, limit: String(limit) };
+      if (status) params.status = status;
+      const result = await api.listTasks(project_slug, params);
+      return { content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }] };
+    } catch (err) { return errorResult(err); }
   });
 
   server.registerTool('start_session', {
@@ -197,15 +222,17 @@ export function createServer(): McpServer {
     description: 'Get rich context for a task: parent, siblings, related tasks, recent activity',
     inputSchema: { task_id: z.string().uuid().describe('Task UUID') },
   }, async ({ task_id }) => {
-    const result = await api.getTask(task_id);
-    const task = result.data;
-    const context = {
-      task: { id: task.id, title: task.title, status: task.status, priority: task.priority },
-      project: task.project, parent: task.parentTask ?? null,
-      subtasks: task.subtasks ?? [], comments: task.comments ?? [],
-      recentActivity: (task.activities ?? []).slice(0, 10), assignee: task.assignee ?? null,
-    };
-    return { content: [{ type: 'text', text: JSON.stringify(context, null, 2) }] };
+    try {
+      const result = await api.getTask(task_id);
+      const task = result.data;
+      const context = {
+        task: { id: task.id, title: task.title, status: task.status, priority: task.priority },
+        project: task.project, parent: task.parentTask ?? null,
+        subtasks: task.subtasks ?? [], comments: task.comments ?? [],
+        recentActivity: (task.activities ?? []).slice(0, 10), assignee: task.assignee ?? null,
+      };
+      return { content: [{ type: 'text', text: JSON.stringify(context, null, 2) }] };
+    } catch (err) { return errorResult(err); }
   });
 
   // ─── Resources ───────────────────────────────────────────────────────────────

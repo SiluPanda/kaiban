@@ -44,9 +44,15 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
+    signal: AbortSignal.timeout(30000),
   });
 
-  const json = await res.json() as any;
+  let json: any;
+  try {
+    json = await res.json();
+  } catch {
+    throw new ApiError(res.status, 'PARSE_ERROR', `HTTP ${res.status}: non-JSON response`);
+  }
 
   if (!res.ok) {
     const errMsg = json?.errors?.message || json?.message || `HTTP ${res.status}`;

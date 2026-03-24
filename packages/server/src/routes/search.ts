@@ -24,7 +24,8 @@ export const searchRoutes: FastifyPluginAsync = async (fastify) => {
     },
   }, async (request) => {
     const { q, limit, offset } = request.query;
-    const pattern = `%${q}%`;
+    const escaped = q.replace(/[%_\\]/g, '\\$&');
+    const pattern = `%${escaped}%`;
 
     const searchCondition = or(
       ilike(tasks.title, pattern),

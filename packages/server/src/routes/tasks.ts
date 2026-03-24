@@ -44,9 +44,10 @@ export const taskRoutes: FastifyPluginAsync = async (fastify) => {
     if (priority) conditions.push(eq(tasks.priority, priority));
     if (assignee_id) conditions.push(eq(tasks.assigneeId, assignee_id));
     if (q) {
+      const escaped = q.replace(/[%_\\]/g, '\\$&');
       conditions.push(or(
-        ilike(tasks.title, `%${q}%`),
-        ilike(tasks.description, `%${q}%`),
+        ilike(tasks.title, `%${escaped}%`),
+        ilike(tasks.description, `%${escaped}%`),
       )!);
     }
 
@@ -99,29 +100,32 @@ export const taskRoutes: FastifyPluginAsync = async (fastify) => {
       }
     }
 
-    const [task] = await db.insert(tasks).values({
-      projectId: project.id,
-      title: body.title,
-      description: body.description ?? null,
-      status: body.status ?? 'backlog',
-      priority: body.priority ?? 'P2',
-      assigneeId: body.assigneeId ?? null,
-      assigneeType: body.assigneeType ?? null,
-      parentTaskId: body.parentTaskId ?? null,
-      labels: body.labels ?? [],
-      estimate: body.estimate ?? null,
-      dueDate: body.dueDate ?? null,
-      metadata: body.metadata ?? {},
-      createdBy: request.user.id,
-      createdByType: request.user.role === 'agent' ? 'agent' as const : 'human' as const,
-    }).returning();
+    const task = await db.transaction(async (tx) => {
+      const [created] = await tx.insert(tasks).values({
+        projectId: project.id,
+        title: body.title,
+        description: body.description ?? null,
+        status: body.status ?? 'backlog',
+        priority: body.priority ?? 'P2',
+        assigneeId: body.assigneeId ?? null,
+        assigneeType: body.assigneeType ?? null,
+        parentTaskId: body.parentTaskId ?? null,
+        labels: body.labels ?? [],
+        estimate: body.estimate ?? null,
+        dueDate: body.dueDate ?? null,
+        metadata: body.metadata ?? {},
+        createdBy: request.user.id,
+        createdByType: request.user.role === 'agent' ? 'agent' as const : 'human' as const,
+      }).returning();
 
-    // Log creation activity
-    await db.insert(activities).values({
-      taskId: task.id,
-      actorId: request.user.id,
-      actorType: request.user.role === 'agent' ? 'agent' as const : 'human' as const,
-      action: 'created',
+      await tx.insert(activities).values({
+        taskId: created.id,
+        actorId: request.user.id,
+        actorType: request.user.role === 'agent' ? 'agent' as const : 'human' as const,
+        action: 'created',
+      });
+
+      return created;
     });
 
     reply.status(201);
@@ -221,12 +225,13 @@ export const taskRoutes: FastifyPluginAsync = async (fastify) => {
       return success(current);
     }
 
-    const [updated] = await db.update(tasks).set(updateValues).where(eq(tasks.id, id)).returning();
-
-    // Log activity for each changed field
-    if (activityEntries.length > 0) {
-      await db.insert(activities).values(activityEntries);
-    }
+    const updated = await db.transaction(async (tx) => {
+      const [result] = await tx.update(tasks).set(updateValues).where(eq(tasks.id, id)).returning();
+      if (activityEntries.length > 0) {
+        await tx.insert(activities).values(activityEntries);
+      }
+      return result;
+    });
 
     return success(updated);
   });

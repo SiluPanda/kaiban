@@ -38,20 +38,23 @@ export const tenantRoutes: FastifyPluginAsync = async (fastify) => {
       return error('SLUG_EXISTS', `Tenant with slug '${body.slug}' already exists`);
     }
 
-    const [tenant] = await db.insert(tenants).values({
-      slug: body.slug,
-      name: body.name,
-      plan: body.plan,
-      billingEmail: body.billingEmail ?? null,
-      maxUsers: body.maxUsers ?? 10,
-      maxProjects: body.maxProjects ?? 5,
-    }).returning();
+    const tenant = await db.transaction(async (tx) => {
+      const [created] = await tx.insert(tenants).values({
+        slug: body.slug,
+        name: body.name,
+        plan: body.plan,
+        billingEmail: body.billingEmail ?? null,
+        maxUsers: body.maxUsers ?? 10,
+        maxProjects: body.maxProjects ?? 5,
+      }).returning();
 
-    // Add the creating user as owner
-    await db.insert(tenantMembers).values({
-      tenantId: tenant.id,
-      userId: request.user.id,
-      role: 'owner',
+      await tx.insert(tenantMembers).values({
+        tenantId: created.id,
+        userId: request.user.id,
+        role: 'owner',
+      });
+
+      return created;
     });
 
     reply.status(201);
