@@ -11,6 +11,7 @@ export function TaskDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [task, setTask] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [commentText, setCommentText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [commentError, setCommentError] = useState('');
@@ -19,7 +20,7 @@ export function TaskDetailPage() {
     if (!id) return;
     api.getTask(id)
       .then((r) => setTask(r.data))
-      .catch(() => {})
+      .catch((err) => setError(err.message || 'Failed to load task'))
       .finally(() => setLoading(false));
   };
 
@@ -40,7 +41,7 @@ export function TaskDetailPage() {
   };
 
   if (loading) return <div className="app"><Nav /><div className="main"><div className="loading">Loading...</div></div></div>;
-  if (!task) return <div className="app"><Nav /><div className="main"><div className="error">Task not found</div></div></div>;
+  if (!task) return <div className="app"><Nav /><div className="main"><div className="error" style={{ color: 'var(--red)' }}>{error || 'Task not found'}</div></div></div>;
 
   return (
     <div className="app">

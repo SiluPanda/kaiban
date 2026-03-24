@@ -8,6 +8,7 @@ export function SessionReviewPage() {
   const [session, setSession] = useState<any>(null);
   const [taskDetails, setTaskDetails] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!id) return;
@@ -25,12 +26,12 @@ export function SessionReviewPage() {
           setTaskDetails(details.filter(Boolean));
         }
       })
-      .catch(() => {})
+      .catch((err) => setError(err.message || 'Failed to load session'))
       .finally(() => setLoading(false));
   }, [id]);
 
   if (loading) return <div className="app"><Nav /><div className="main"><div className="loading">Loading session...</div></div></div>;
-  if (!session) return <div className="app"><Nav /><div className="main"><div className="error">Session not found</div></div></div>;
+  if (!session) return <div className="app"><Nav /><div className="main"><div className="error" style={{ color: 'var(--red)' }}>{error || 'Session not found'}</div></div></div>;
 
   return (
     <div className="app">

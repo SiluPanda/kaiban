@@ -258,7 +258,7 @@ taskCommand
   .action(async (id, options) => {
     try {
       const format = getOutputFormat(options);
-      const taskResult = await api<any>(`/api/v1/tasks/${id}`);
+      const taskResult = await api<any>(`/api/v1/tasks/${encodeURIComponent(id)}`);
       const task = taskResult.data;
 
       const result = await api<any>('/api/v1/ai/decompose', {
