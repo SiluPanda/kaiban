@@ -1,15 +1,15 @@
 <p align="center">
   <h1 align="center">Pith</h1>
-  <p align="center">AI-Native Task Management for Humans & Agents</p>
+  <p align="center">Task management where AI agents and humans are equal teammates.</p>
 </p>
 
 <p align="center">
-  <a href="#installation"><strong>Get Started</strong></a> &middot;
-  <a href="#features"><strong>Features</strong></a> &middot;
-  <a href="#mcp-integration"><strong>MCP Integration</strong></a> &middot;
+  <a href="#quick-start"><strong>Quick Start</strong></a> &middot;
+  <a href="#connect-your-ai-agent"><strong>Connect Your Agent</strong></a> &middot;
   <a href="#cli"><strong>CLI</strong></a> &middot;
-  <a href="#architecture"><strong>Architecture</strong></a> &middot;
-  <a href="#roadmap"><strong>Roadmap</strong></a>
+  <a href="#web-ui"><strong>Web UI</strong></a> &middot;
+  <a href="#api"><strong>API</strong></a> &middot;
+  <a href="#ai-features"><strong>AI Features</strong></a>
 </p>
 
 <p align="center">
@@ -17,95 +17,64 @@
   <img src="https://img.shields.io/badge/node-%3E%3D20-brightgreen" alt="Node.js 20+">
   <img src="https://img.shields.io/badge/PostgreSQL-16%2B-336791" alt="PostgreSQL 16+">
   <img src="https://img.shields.io/badge/MCP-Native-purple" alt="MCP Native">
-  <img src="https://img.shields.io/badge/status-in%20development-orange" alt="Status: In Development">
 </p>
 
 ---
 
-**Pith** is an open-source, self-hosted task management system built from the ground up for a world where AI agents are first-class team members. Unlike existing tools that bolt AI onto human-centric workflows, Pith treats AI agents and humans as equal participants.
+<p align="center">
+  <img src="docs/screenshots/pith-demo.gif" alt="Pith — Board view, list view, task details, and agent activity" width="720">
+</p>
 
-> In 2026 and beyond, most engineering work will be co-performed by humans and AI coding agents. These agents need to read tasks, update status, log work, create sub-tasks, and query project state — without a browser. Pith provides the infrastructure for this workflow natively.
+AI coding agents do real engineering work — they read specs, write code, fix bugs, and submit PRs. But they're blind to the project's task board. Every context switch requires a human to copy-paste task details, update statuses, and relay decisions.
 
-## Why Pith?
+**Pith fixes this.** It's an open-source task management system where agents can read tasks, update progress, log work, and create sub-tasks — the same way humans do, but through APIs and MCP instead of a browser.
 
-Existing project management tools weren't designed for the AI-agent era:
+## Quick Start
 
-- **The Agent Access Problem** — AI agents (Claude Code, Codex, Devin) perform real engineering work but operate blind to the project's task graph. Context is copy-pasted by humans.
-- **The Integration Tax** — Every team building with AI agents writes custom glue code to bridge their task tracker and their agent workflows.
-- **The Complexity Trap** — Open-source alternatives replicate Jira's complexity. They're designed for humans clicking through UIs, with APIs as afterthoughts.
-- **The Vendor Lock-in Problem** — AI-native features in commercial tools lock you into specific AI providers.
-
-## Features
-
-### Dual-Citizen Design
-Every feature works equally well for humans (via web UI) and AI agents (via MCP/CLI/API).
-
-### MCP-Native
-Ships as a first-class [MCP](https://modelcontextprotocol.io/) tool server. Any MCP-compatible client — Claude Code, Claude Desktop, Cursor, Windsurf, or custom agents — can manage tasks out of the box.
-
-### CLI-First
-A powerful CLI (`pith`) that AI coding agents can invoke directly from terminal sessions. Machine-parseable `--json` output on every command.
-
-### AI-Powered, Not AI-Dependent
-AI features (summarization, decomposition, prioritization) are optional. The tool works perfectly without any AI model configured.
-
-### BYOM (Bring Your Own Model)
-Configure your own AI provider and API key. Supports any provider via Vercel AI SDK — OpenAI, Anthropic, Google, Groq, Ollama, and more.
-
-### Minimal & Opinionated
-Deliberately avoids Jira's complexity. Simple primitives that compose well. No 47 issue types.
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────┐
-│                  Presentation                    │
-│  ┌──────────┐  ┌──────────┐  ┌───────────────┐  │
-│  │  Web UI   │  │   CLI    │  │  MCP Server   │  │
-│  │ React+Vite│  │Commander │  │ stdio + HTTP  │  │
-│  └────┬──────┘  └────┬─────┘  └──────┬────────┘  │
-├───────┴──────────────┴───────────────┴────────────┤
-│                   API Layer                       │
-│            Fastify + Zod + Swagger                │
-├───────────────────────────────────────────────────┤
-│                 Business Logic                    │
-│          Task Lifecycle · RBAC · Webhooks         │
-├───────────────────────────────────────────────────┤
-│              AI Layer (Optional)                  │
-│     Vercel AI SDK · BYOM · Structured Output      │
-├───────────────────────────────────────────────────┤
-│                  Data Layer                       │
-│          PostgreSQL 16+ · Drizzle ORM             │
-└───────────────────────────────────────────────────┘
-```
-
-## Installation
-
-### Docker Compose (Recommended)
+### Docker (recommended)
 
 ```bash
 git clone https://github.com/SiluPanda/pith.git
-cd pith
+cd pith/docker
 docker compose up
 ```
 
-Target: under 512MB RAM. Under 5 minutes from `docker compose up` to your first task.
+The API is ready at `http://localhost:3456`. Check it with `curl http://localhost:3456/health`.
 
-### Bare Metal
+### Without Docker
 
-Requires Node.js 20+ and PostgreSQL 16+. No Redis, no message queue, no Elasticsearch.
+Requires Node.js 20+ and PostgreSQL 16+.
 
 ```bash
 git clone https://github.com/SiluPanda/pith.git
 cd pith
+cp .env.example .env
+# Edit .env — set DATABASE_URL and JWT_SECRET
 npm install
 npm run db:migrate
 npm run dev
 ```
 
-## MCP Integration
+### Create your first user and project
 
-Pith ships as a fully compliant MCP tool server. Add to your `.mcp.json` (Claude Code, Claude Desktop, Cursor, etc.):
+```bash
+# Seed sample data (creates admin user, project, and example tasks)
+npm run db:seed
+
+# Or use the API directly:
+curl -X POST http://localhost:3456/api/v1/users \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Admin", "email": "admin@example.com", "role": "admin"}'
+# Save the apiKey from the response — it's shown only once
+```
+
+## Connect Your AI Agent
+
+Pith is a native [MCP](https://modelcontextprotocol.io/) tool server. Any MCP-compatible client — Claude Code, Claude Desktop, Cursor, Windsurf, or custom agents — works out of the box.
+
+### Setup
+
+Add to your MCP client config (e.g. `.mcp.json`):
 
 ```json
 {
@@ -115,183 +84,281 @@ Pith ships as a fully compliant MCP tool server. Add to your `.mcp.json` (Claude
       "args": ["-y", "@pith/mcp-server"],
       "env": {
         "PITH_URL": "http://localhost:3456",
-        "PITH_API_KEY": "kb_..."
+        "PITH_API_KEY": "kb_your_api_key_here"
       }
     }
   }
 }
 ```
 
-### MCP Tools
+### What your agent can do
 
-| Tool | Description |
+| Tool | What it does |
 |------|-------------|
-| `list_tasks` | Query tasks with filters (status, priority, assignee, labels) |
-| `get_task` | Full task details with comments, sub-tasks, activity |
+| `list_tasks` | Query tasks with filters — status, priority, assignee, labels, free-text search |
+| `get_task` | Get full task details including comments, sub-tasks, and activity history |
 | `create_task` | Create a task with title, description, priority, labels |
-| `update_task` | Update any task field |
-| `add_comment` | Add a Markdown comment to a task |
-| `create_subtasks` | Batch-create sub-tasks (great for AI decomposition) |
-| `get_my_tasks` | Tasks assigned to the current agent/user |
-| `get_context` | Rich context for a task — parent, siblings, activity |
-| `start_session` / `end_session` | Track agent work sessions |
-| `search_tasks` | Full-text search across tasks and comments |
+| `update_task` | Change status, priority, assignee, or any other field |
+| `add_comment` | Post a Markdown comment on a task |
+| `create_subtasks` | Break a task into sub-tasks (up to 20 at once) |
+| `search_tasks` | Full-text search across all tasks |
+| `get_my_tasks` | See what's assigned to the current agent |
+| `get_context` | Get rich context — parent task, siblings, recent activity |
+| `start_session` / `end_session` | Track work sessions with summaries |
 
-### MCP Resources
+Your agent also gets read access to live resources:
 
-- `pith://project/{slug}/board` — Current board state
+- `pith://project/{slug}/board` — Current board state by status column
 - `pith://project/{slug}/backlog` — Full backlog with priorities
-- `pith://task/{id}/context` — Complete task context
-- `pith://user/{id}/workload` — Assignment load
+- `pith://task/{id}/context` — Complete task context for deep work
+- `pith://user/{id}/workload` — Current assignment load
+
+### Example: autonomous coding agent workflow
+
+```
+1. Agent calls get_my_tasks          → sees "Fix auth middleware" assigned to it
+2. Agent calls get_context           → reads task details, parent task, recent comments
+3. Agent calls start_session         → begins tracked work session
+4. Agent writes code, runs tests     → (happens outside Pith)
+5. Agent calls update_task           → moves status to "in_review"
+6. Agent calls add_comment           → posts summary + PR link
+7. Agent calls end_session           → records what it accomplished
+```
+
+No human had to copy-paste context or update the board.
 
 ## CLI
 
+Install globally or use via npx:
+
 ```bash
-# Initialize
-pith init
+npx @pith/cli init --url http://localhost:3456 --key kb_your_key --project my-project
+```
 
-# Task management
+### Managing tasks
+
+```bash
+# List tasks with filters
 pith task list --status todo --priority P0
-pith task create "Implement auth middleware" --priority P1
-pith task show TASK-123
-pith task update TASK-123 --status in_progress
-pith task comment TASK-123 "Fixed the race condition, PR incoming"
 
-# AI-powered (requires AI provider config)
-pith task decompose TASK-123
-pith task context TASK-123
+# Create a task
+pith task create "Implement rate limiting" --priority P1 --labels security,api
 
-# Agent sessions
-pith session start --tasks TASK-123,TASK-124
-pith session end --summary "Completed auth middleware and tests"
+# View task details with comments and activity
+pith task show <task-id>
 
-# Search
+# Update status
+pith task update <task-id> --status in_progress
+
+# Add a comment
+pith task comment <task-id> "Started work, ETA 2 hours"
+
+# Search across all tasks
 pith search "authentication bug"
+```
 
-# All commands support --json for machine-parseable output
+### Agent sessions
+
+```bash
+pith session start --name "Claude Code" --tasks <task-id-1>,<task-id-2>
+# ... do work ...
+pith session end <session-id> --summary "Fixed auth bug and added tests"
+pith session list
+```
+
+### Machine-readable output
+
+Every command supports `--json` for piping into scripts:
+
+```bash
 pith task list --status todo --json | jq '.[].title'
 ```
 
-## Agent Workflow Patterns
+## Web UI
 
-### Autonomous Coding Agent
+Pith includes a lightweight web interface at `http://localhost:5173` (dev mode) or served by the API in production.
 
-```
-Agent calls get_my_tasks     → sees assigned work
-Agent calls start_session    → begins tracked session
-Agent calls get_context      → understands the full picture
-Agent does coding work       → (outside Pith)
-Agent calls update_task      → sets status to in_review
-Agent calls add_comment      → posts summary + PR link
-Agent calls end_session      → records work summary
-```
+- **Board view** — Kanban-style columns by status
+- **List view** — Sortable table with filters
+- **Task detail** — Full context with comments, sub-tasks, and activity timeline
+- **Agent activity feed** — Review what your AI agents have been working on
+- **Session review** — Inspect individual agent work sessions
 
-### Planning Agent
-
-```
-Reads high-level task        → via get_task
-Calls AI decomposition       → via create_subtasks
-Assigns sub-tasks            → to agents or humans
-Monitors progress            → by polling task statuses
-```
-
-### Multi-Agent Orchestration
-
-Pith serves as the shared state layer for multi-agent systems. Multiple agents read and write to the same project with full audit trails.
-
-## AI Configuration (Optional)
+Start the dev server:
 
 ```bash
-pith config set ai.provider anthropic
-pith config set ai.apiKey sk-ant-...
+cd packages/web
+npm run dev
 ```
 
-Or via environment variables:
+## API
 
-| Variable | Example |
-|----------|---------|
-| `PITH_AI_PROVIDER` | `anthropic`, `openai`, `google`, `groq`, `ollama` |
-| `PITH_AI_MODEL` | `claude-sonnet-4-20250514`, `gpt-4o`, `gemini-2.0-flash` |
-| `PITH_AI_API_KEY` | `sk-ant-...`, `sk-...` |
-| `PITH_AI_BASE_URL` | `http://localhost:11434` (for Ollama) |
+Full REST API with OpenAPI/Swagger documentation at `/docs` (development mode).
 
-### AI Features
+### Authentication
 
-- **Task Decomposition** — Break large tasks into actionable sub-tasks with estimates
-- **Smart Triage** — Auto-suggest priority, labels, and assignee
-- **Summary Generation** — Sprint and project summaries from activity data
-- **Duplicate Detection** — Flag potential duplicates on task creation
-- **Context Assembly** — Build rich context documents for agents
-- **Effort Estimation** — Suggest estimates based on historical data
+Every request requires a `Bearer` token — either an API key or a JWT access token:
 
-All AI features gracefully degrade when unconfigured. No AI call blocks a user action.
+```bash
+# Using an API key
+curl -H "Authorization: Bearer kb_your_api_key" http://localhost:3456/api/v1/projects
 
-## Tech Stack
+# Using JWT (get tokens via login)
+curl -X POST http://localhost:3456/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@example.com", "apiKey": "kb_your_api_key"}'
+```
 
-| Component | Technology |
-|-----------|-----------|
-| Runtime | Node.js 20+ |
-| Language | TypeScript 5.x |
-| Database | PostgreSQL 16+ |
-| ORM | Drizzle ORM |
-| API | Fastify + Zod + Swagger |
-| AI | Vercel AI SDK |
-| MCP | @modelcontextprotocol/sdk |
-| CLI | Commander.js |
-| Web UI | React 19 + Vite 6 |
-| Testing | Vitest + Supertest |
+### Key endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/projects` | List projects |
+| `POST` | `/api/v1/projects` | Create project (admin) |
+| `GET` | `/api/v1/projects/:slug/tasks` | List tasks with filters |
+| `POST` | `/api/v1/projects/:slug/tasks` | Create task |
+| `GET` | `/api/v1/tasks/:id` | Get task with full context |
+| `PATCH` | `/api/v1/tasks/:id` | Update task fields |
+| `POST` | `/api/v1/tasks/:id/comments` | Add comment |
+| `POST` | `/api/v1/tasks/:id/subtasks` | Batch create sub-tasks |
+| `GET` | `/api/v1/search?q=...` | Full-text search |
+| `POST` | `/api/v1/sessions` | Start agent session |
+| `GET` | `/api/v1/projects/:slug/analytics` | Project analytics |
+
+Full reference: [docs/api-reference.md](docs/api-reference.md)
+
+### Roles
+
+| Role | Can do |
+|------|--------|
+| **admin** | Everything — manage users, projects, webhooks, tenants |
+| **member** | Create/update tasks, add comments, view projects |
+| **agent** | Same as member — designed for AI agent API keys |
+
+### Webhooks
+
+Get notified when things happen in your project:
+
+```bash
+curl -X POST http://localhost:3456/api/v1/projects/my-project/webhooks \
+  -H "Authorization: Bearer kb_admin_key" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://your-server.com/webhook", "events": ["task.created", "task.updated"]}'
+```
+
+Events: `task.created`, `task.updated`, `task.deleted`, `comment.created`, `session.started`, `session.ended`, `project.created`, `*`
+
+Payloads are signed with HMAC-SHA256 via the `X-Pith-Signature` header.
+
+### Slack & Discord notifications
+
+```bash
+curl -X POST http://localhost:3456/api/v1/projects/my-project/notifications \
+  -H "Authorization: Bearer kb_admin_key" \
+  -H "Content-Type: application/json" \
+  -d '{"provider": "slack", "name": "dev-channel", "webhookUrl": "https://hooks.slack.com/...", "events": ["task.created", "task.status_changed"]}'
+```
+
+## AI Features
+
+AI features are **optional**. Pith works fully without any AI model configured. When configured, AI enhances — never blocks — your workflow.
+
+### Configure a provider
+
+```bash
+# Via CLI
+pith config set ai.provider anthropic
+pith config set ai.model claude-sonnet-4-20250514
+pith config set ai.apiKey sk-ant-...
+
+# Or via environment variables
+export PITH_AI_PROVIDER=anthropic      # anthropic, openai, google, groq, ollama
+export PITH_AI_MODEL=claude-sonnet-4-20250514
+export PITH_AI_API_KEY=sk-ant-...
+export PITH_AI_BASE_URL=               # optional, for self-hosted models
+```
+
+Supports any provider via Vercel AI SDK: Anthropic, OpenAI, Google, Groq, OpenRouter, and Ollama for local models.
+
+### What AI can do
+
+- **Decompose tasks** — Break a large task into actionable sub-tasks with estimates
+- **Triage** — Auto-suggest priority and labels for new tasks
+- **Context assembly** — Build a briefing document with key points and risks for an agent starting work
+- **Effort estimation** — Suggest time estimates based on historical project data
+- **Sprint summaries** — Generate project summaries from activity data
+- **Duplicate detection** — Flag similar tasks using pg_trgm similarity
+
+```bash
+# Decompose from CLI
+pith task decompose <task-id>
+
+# Get AI-assembled context
+pith task context <task-id>
+
+# Via API
+curl -X POST http://localhost:3456/api/v1/ai/triage \
+  -H "Authorization: Bearer kb_..." \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Fix memory leak in worker pool", "description": "Workers are not being cleaned up..."}'
+```
+
+## Multi-Tenant Mode
+
+Pith supports multi-tenant SaaS deployments with isolated workspaces:
+
+```bash
+curl -X POST http://localhost:3456/api/v1/tenants \
+  -H "Authorization: Bearer kb_admin_key" \
+  -H "Content-Type: application/json" \
+  -d '{"slug": "acme-corp", "name": "Acme Corp", "plan": "pro"}'
+```
+
+Each tenant gets configurable user and project limits.
+
+## Configuration Reference
+
+### Environment variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `DATABASE_URL` | Yes (production) | `postgres://postgres:postgres@localhost:5432/pith` | PostgreSQL connection string |
+| `JWT_SECRET` | Yes (production) | dev fallback | Secret for signing JWT tokens |
+| `PORT` | No | `3456` | API server port |
+| `HOST` | No | `0.0.0.0` | API server bind address |
+| `CORS_ORIGIN` | No | `http://localhost:5173` | Allowed CORS origins (comma-separated) |
+| `LOG_LEVEL` | No | `info` | Log level: `debug`, `info`, `warn`, `error` |
+| `PITH_AI_PROVIDER` | No | — | AI provider name |
+| `PITH_AI_MODEL` | No | — | AI model identifier |
+| `PITH_AI_API_KEY` | No | — | AI provider API key |
+| `GITHUB_WEBHOOK_SECRET` | No | — | Secret for verifying GitHub webhook signatures |
 
 ## Project Structure
 
 ```
-pith/
-├── packages/
-│   ├── core/           # Shared types, Zod schemas, constants
-│   ├── db/             # Drizzle schema, migrations, seed data
-│   ├── server/         # Fastify API server, business logic
-│   ├── ai/             # AI SDK integration layer
-│   ├── mcp-server/     # MCP tool server (stdio + HTTP)
-│   ├── cli/            # Commander.js CLI
-│   └── web/            # React + Vite web UI
-├── docker/
-│   ├── Dockerfile
-│   └── docker-compose.yml
-├── task/               # Development task tracking
-└── docs/               # Documentation
+packages/
+  core/           Shared types, Zod schemas, constants
+  db/             PostgreSQL schema, migrations, seed data (Drizzle ORM)
+  server/         REST API — Fastify, auth, RBAC, webhooks, analytics
+  ai/             AI integration layer (Vercel AI SDK, provider-agnostic)
+  mcp-server/     MCP tool server (stdio + HTTP transports)
+  cli/            Command-line interface (Commander.js)
+  web/            Web UI (React + Vite)
 ```
-
-## Roadmap
-
-### Phase 1: Foundation (Weeks 1-4)
-Database schema, core CRUD API, authentication, CLI, MCP server (stdio), Docker setup, test suite.
-
-### Phase 2: AI & Polish (Weeks 5-8)
-AI SDK integration, agent session tracking, MCP HTTP transport, web UI, webhooks, documentation.
-
-### Phase 3: Ecosystem (Weeks 9-12)
-GitHub integration, agent activity review UI, analytics, duplicate detection, npm publishing, launch.
-
-### Phase 4: Growth (Post-Launch)
-Plugin system, Slack/Discord integration, custom views, time tracking, multi-tenant SaaS mode.
-
-## Security
-
-- **API Key Auth** — Per user/agent, bcrypt-hashed, Bearer token
-- **JWT Sessions** — Short-lived access (15 min) + refresh tokens (7 days) for web UI
-- **RBAC** — Admin, Member, Agent roles with scoped permissions
-- **Agent Safety** — Rate limiting, attributed actions, configurable session limits, human approval gates
-- **Webhook Signing** — HMAC-SHA256 payload verification
 
 ## Contributing
 
-Contributions are welcome! Please check the [task/](./task) directory for current development tasks organized by phase.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
+
+```bash
+git clone https://github.com/SiluPanda/pith.git
+cd pith
+npm install
+npm run db:migrate
+npm test            # 146 tests
+npm run dev         # Start API server with hot reload
+```
 
 ## License
 
 [MIT](LICENSE)
-
----
-
-<p align="center">
-  <sub>Built for the era where humans and AI agents ship code together.</sub>
-</p>
